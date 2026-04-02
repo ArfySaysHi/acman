@@ -1,49 +1,102 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useRef, useState } from "react";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const initRef = useRef(false);
+  const [logs, setLogs] = useState("");
+  const [commandInput, setCommandInput] = useState("");
+  const [connected, setConnected] = useState(false);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (initRef.current) return;
+
+    initRef.current = true;
+
+    let unlisten: UnlistenFn | undefined;
+
+    const setup = async () => {
+      try {
+        await invoke("attach_console");
+
+        unlisten = await listen<string>("console-output", (event) => {
+          setLogs((prev) => prev + event.payload);
+        });
+
+        setConnected(true);
+      } catch (err) {
+        console.error(err);
+        setConnected(false);
+      }
+    };
+
+    setup();
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  const sendCommand = async () => {
+    if (!commandInput.trim()) return;
+
+    try {
+      await invoke("send_command", { command: commandInput });
+      setCommandInput("");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendCommand();
+    }
+  };
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <main className="h-screen flex flex-col bg-gray-900 text-green-400 p-4">
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="text-lg font-bold">AzerothCore Console</h1>
+        <span
+          className={`text-sm ${connected ? "text-green-500" : "text-red-500"}`}
+        >
+          {connected ? "Connected" : "Disconnected"}
+        </span>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
+      <textarea
+        ref={textareaRef}
+        value={logs}
+        readOnly
+        className="flex-1 w-full bg-black text-green-400 p-2 rounded resize-none font-mono text-sm overflow-y-auto"
+      />
+
+      <div className="mt-2 flex gap-2">
         <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+          value={commandInput}
+          onChange={(e) => setCommandInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Enter command..."
+          className="flex-1 bg-gray-800 text-white p-2 rounded outline-none"
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+        <button
+          onClick={sendCommand}
+          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
+        >
+          Send
+        </button>
+      </div>
     </main>
   );
 }
