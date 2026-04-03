@@ -1,19 +1,25 @@
-use bollard::Docker;
 use bollard::container::AttachContainerResults;
 use bollard::query_parameters::AttachContainerOptionsBuilder;
+use bollard::Docker;
 use futures_util::StreamExt;
-use tauri::{AppHandle, Emitter};
-use tokio::io::{AsyncWrite, AsyncWriteExt};
+use regex::Regex;
 use std::pin::Pin;
 use std::sync::Arc;
+use tauri::{AppHandle, Emitter};
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::sync::Mutex;
 
 struct ConsoleState {
     input: Option<Pin<Box<dyn AsyncWrite + Send>>>,
-    attached: bool
+    attached: bool,
 }
 
 type SharedState = Arc<Mutex<ConsoleState>>;
+
+fn strip_ansi(s: &str) -> String {
+    let re = Regex::new(r"\x1b\[[0-?]*[ -/]*[@-~]").unwrap();
+    re.replace_all(s, "").into_owned()
+}
 
 #[tauri::command]
 async fn attach_console(
@@ -26,8 +32,7 @@ async fn attach_console(
         return Ok(());
     }
 
-    let docker = Docker::connect_with_local_defaults()
-        .map_err(|e| e.to_string())?;
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
 
     let options = AttachContainerOptionsBuilder::default()
         .stdin(true)
@@ -46,7 +51,7 @@ async fn attach_console(
 
     tokio::spawn(async move {
         while let Some(Ok(msg)) = output.next().await {
-            let _ = app.emit("console-output", msg.to_string());
+            let _ = app.emit("console-output", strip_ansi(&msg.to_string()));
         }
     });
 
@@ -54,10 +59,7 @@ async fn attach_console(
 }
 
 #[tauri::command]
-async fn send_command(
-    command: String,
-    state: tauri::State<'_, SharedState>,
-) -> Result<(), String> {
+async fn send_command(command: String, state: tauri::State<'_, SharedState>) -> Result<(), String> {
     let mut guard = state.lock().await;
 
     if let Some(input) = guard.input.as_mut() {

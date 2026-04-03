@@ -79,7 +79,7 @@ function App() {
         ref={textareaRef}
         value={logs}
         readOnly
-        className="flex-1 w-full bg-black text-green-400 p-2 rounded resize-none font-mono text-sm overflow-y-auto"
+        className="flex-1 w-full bg-black text-green-400 p-2 rounded resize-none font-mono text-sm overflow-y-auto leading-none"
       />
 
       <div className="mt-2 flex gap-2">
