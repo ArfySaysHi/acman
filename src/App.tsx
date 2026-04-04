@@ -1,54 +1,27 @@
 import "./App.css";
+import { useState, useRef, useEffect } from "react";
+import useStream from "./hooks/useStream";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState } from "react";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 function App() {
-  const initRef = useRef(false);
-  const [logs, setLogs] = useState("");
+  const { stream: worldserverStream, connected: worldserverConnected } =
+    useStream({
+      listener: "console-output",
+      attach: "attach_worldserver",
+      container: "ac-worldserver",
+    });
+
   const [commandInput, setCommandInput] = useState("");
-  const [connected, setConnected] = useState(false);
-
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  useEffect(() => {
-    if (initRef.current) return;
-
-    initRef.current = true;
-
-    let unlisten: UnlistenFn | undefined;
-
-    const setup = async () => {
-      try {
-        await invoke("attach_console");
-
-        unlisten = await listen<string>("console-output", (event) => {
-          setLogs((prev) => prev + event.payload);
-        });
-
-        setConnected(true);
-      } catch (err) {
-        console.error(err);
-        setConnected(false);
-      }
-    };
-
-    setup();
-
-    return () => {
-      if (unlisten) unlisten();
-    };
-  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
     }
-  }, [logs]);
+  }, [worldserverStream]);
 
   const sendCommand = async () => {
     if (!commandInput.trim()) return;
-
     try {
       await invoke("send_command", { command: commandInput });
       setCommandInput("");
@@ -69,15 +42,15 @@ function App() {
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-lg font-bold">AzerothCore Console</h1>
         <span
-          className={`text-sm ${connected ? "text-green-500" : "text-red-500"}`}
+          className={`text-sm ${worldserverConnected ? "text-green-500" : "text-red-500"}`}
         >
-          {connected ? "Connected" : "Disconnected"}
+          {worldserverConnected ? "Connected" : "Disconnected"}
         </span>
       </div>
 
       <textarea
         ref={textareaRef}
-        value={logs}
+        value={worldserverStream}
         readOnly
         className="flex-1 w-full bg-black text-green-400 p-2 rounded resize-none font-mono text-sm overflow-y-auto leading-none"
       />
