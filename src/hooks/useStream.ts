@@ -1,63 +1,67 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen, Event, UnlistenFn } from "@tauri-apps/api/event";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
 
 interface UseStreamOptions {
-  listener: string; // console output events
-  attach: string; // command to attach to container
-  container: string; // container name, e.g. "ac-worldserver"
+  listener: string;
+  attach: string;
+  container: string;
 }
 
 const useStream = ({ listener, attach, container }: UseStreamOptions) => {
   const [stream, setStream] = useState("");
   const [connected, setConnected] = useState(false);
   const streamRef = useRef("");
-  const unlistenRef = useRef<UnlistenFn | null>(null);
+
+  const appendLine = (line: string) => {
+    streamRef.current += line + "\n";
+    setStream(streamRef.current);
+  };
+
+  const tryAttach = async (onSuccess: () => void) => {
+    try {
+      await invoke(attach);
+      onSuccess();
+    } catch {
+      // stay disconnected
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
+    const unlisteners: UnlistenFn[] = [];
 
     const setup = async () => {
-      try {
-        // attach immediately
-        await invoke(attach);
+      await tryAttach(() => {
         if (mounted) setConnected(true);
-      } catch {
-        if (mounted) setConnected(false);
-      }
-
-      // Listen for Docker events
-      unlistenRef.current = await listen<string>(
-        "docker-event",
-        async (event: Event<string>) => {
-          const payload = event.payload;
-          // Only react to our target container
-          if (payload.includes(container) && payload.includes("→ start")) {
-            try {
-              await invoke(attach);
-              if (mounted) setConnected(true);
-            } catch {
-              if (mounted) setConnected(false);
-            }
-          }
-          // Append event to console stream
-          streamRef.current += payload + "\n";
-          if (mounted) setStream(streamRef.current);
-        },
-      );
-
-      // Listen for console output
-      await listen<string>(listener, (event) => {
-        streamRef.current += event.payload + "\n";
-        if (mounted) setStream(streamRef.current);
       });
+
+      unlisteners.push(
+        await listen<string>("docker-event", async (event) => {
+          const { payload } = event;
+          if (!payload.includes(container)) return;
+
+          if (payload.includes("→ start")) {
+            await tryAttach(() => {
+              if (mounted) setConnected(true);
+            });
+          }
+          if (!payload.includes("→ exec_")) {
+            if (mounted) appendLine(payload);
+          }
+        }),
+
+        await listen<string>(listener, (event) => {
+          if (mounted) appendLine(event.payload);
+        }),
+      );
     };
 
     setup();
 
     return () => {
       mounted = false;
-      if (unlistenRef.current) unlistenRef.current();
+      unlisteners.forEach((fn) => fn());
     };
   }, [attach, container, listener]);
 
