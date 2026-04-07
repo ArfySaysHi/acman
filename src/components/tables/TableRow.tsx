@@ -33,7 +33,7 @@ export default function TableRow({
           <td key={column} className="px-4 py-3">
             <input
               type="text"
-              value={editValues[column] ?? ""}
+              value={String(editValues[column]) ?? ""}
               onChange={(e) => onChange(column, e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-green-400 focus:outline-none focus:border-green-400"
             />
