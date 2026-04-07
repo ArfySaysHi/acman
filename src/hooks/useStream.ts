@@ -38,19 +38,28 @@ const useStream = ({ listener, attach, container }: UseStreamOptions) => {
       });
 
       unlisteners.push(
-        await listen<string>("docker-event", async (event) => {
-          const { payload } = event;
-          if (!payload.includes(container)) return;
+        await listen<{ name?: string; action?: string }>(
+          "docker-event",
+          async (event) => {
+            const { payload } = event;
+            if (!payload) return;
 
-          if (payload.includes("→ start")) {
-            await tryAttach(() => {
-              if (mounted) setConnected(true);
-            });
-          }
-          if (!payload.includes("→ exec_")) {
-            if (mounted) appendLine(payload);
-          }
-        }),
+            const { name, action } = payload;
+
+            if (!name || !action) return;
+            if (name !== container) return;
+            if (action.includes("_exec")) return;
+
+            if (action === "start") {
+              await tryAttach(() => {
+                if (mounted) setConnected(true);
+              });
+            }
+            if (action === "destroy") {
+              if (mounted) setConnected(false);
+            }
+          },
+        ),
 
         await listen<string>(listener, (event) => {
           if (mounted) appendLine(event.payload);
