@@ -36,6 +36,7 @@ fn spawn_worldserver_output_thread(
     mut output: Pin<
         Box<dyn Stream<Item = Result<LogOutput, bollard::errors::Error>> + Send + 'static>,
     >,
+    state: Arc<Mutex<ConsoleState>>,
 ) {
     let app_clone = app.clone();
     tokio::spawn(async move {
@@ -62,6 +63,10 @@ fn spawn_worldserver_output_thread(
                 }
             }
         }
+
+        let mut guard = state.lock().await;
+        guard.worldserver.attached = false;
+        guard.worldserver.input = None;
     });
 }
 
@@ -87,7 +92,7 @@ pub async fn attach_worldserver(
         .map_err(|e| e.to_string())?;
 
     let shared_input = Arc::new(Mutex::new(input));
-    spawn_worldserver_output_thread(app, output);
+    spawn_worldserver_output_thread(app, output, Arc::clone(state.inner()));
 
     {
         let mut guard = state.lock().await;
