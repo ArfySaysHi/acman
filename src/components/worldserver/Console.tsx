@@ -1,63 +1,28 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, JSX, useRef } from "react";
 
-interface Props {
+interface ConsoleProps {
   stream: string;
 }
 
-const Console = ({ stream }: Props) => {
-  const [commandInput, setCommandInput] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+export default function Console({ stream }: ConsoleProps): JSX.Element {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [stream]);
 
-  const sendCommand = async () => {
-    if (!commandInput.trim()) return;
-    try {
-      await invoke("send_ws_command", { command: commandInput });
-      setCommandInput("");
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendCommand();
-    }
-  };
-
   return (
-    <>
-      <textarea
-        ref={textareaRef}
-        value={stream}
-        readOnly
-        className="flex-1 w-full bg-black text-green-400 p-2 rounded resize-none font-mono text-sm overflow-y-auto leading-none"
-      />
-
-      <div className="mt-2 flex gap-2">
-        <input
-          value={commandInput}
-          onChange={(e) => setCommandInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter command..."
-          className="flex-1 bg-gray-800 text-white p-2 rounded outline-none"
-        />
-        <button
-          onClick={sendCommand}
-          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
-        >
-          Send
-        </button>
-      </div>
-    </>
+    <div
+      ref={scrollRef}
+      className="bg-gray-900 border border-gray-700 rounded-lg p-4 h-96 overflow-y-auto font-mono text-sm text-white"
+    >
+      {stream.length === 0 ? (
+        <div className="text-gray-500 italic">Waiting for server output...</div>
+      ) : (
+        <pre className="whitespace-pre-wrap break-words">{stream}</pre>
+      )}
+    </div>
   );
-};
-
-export default Console;
+}
