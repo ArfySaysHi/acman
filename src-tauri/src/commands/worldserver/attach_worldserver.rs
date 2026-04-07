@@ -6,11 +6,11 @@ use bollard::{container::AttachContainerResults, query_parameters::AttachContain
 use futures_util::{Stream, StreamExt};
 use std::pin::Pin;
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, State};
 use tokio::sync::{Mutex, MutexGuard};
 
-fn is_attaching(guard: &MutexGuard<'_, ConsoleState>) -> bool {
-    guard.worldserver.attached || guard.worldserver.attaching
+fn is_attaching(guard: &MutexGuard<'_, WorldServerState>) -> bool {
+    guard.attached || guard.attaching
 }
 
 fn get_options() -> AttachContainerOptions {
@@ -36,7 +36,7 @@ fn spawn_worldserver_output_thread(
     mut output: Pin<
         Box<dyn Stream<Item = Result<LogOutput, bollard::errors::Error>> + Send + 'static>,
     >,
-    state: Arc<Mutex<ConsoleState>>,
+    state: Arc<AppState>,
 ) {
     let app_clone = app.clone();
     tokio::spawn(async move {
@@ -59,32 +59,29 @@ fn spawn_worldserver_output_thread(
                 if !normalized.is_empty() && normalized != last_line {
                     let _ = app_clone.emit("console-output", normalized.clone());
                     last_line = normalized;
-                    println!("{:?}", last_line);
                 }
             }
         }
 
-        let mut guard = state.lock().await;
-        guard.worldserver.attached = false;
-        guard.worldserver.input = None;
+        let mut guard = state.worldserver.lock().await;
+        guard.attached = false;
+        guard.input = None;
     });
 }
 
 #[tauri::command]
 pub async fn attach_worldserver(
     app: AppHandle,
-    state: tauri::State<'_, SharedState>,
+    state: State<'_, SharedAppState>,
 ) -> Result<(), String> {
     let docker = {
-        let mut guard = state.lock().await;
+        let mut guard = state.worldserver.lock().await;
         if is_attaching(&guard) {
             return Ok(());
         }
-        guard.worldserver.attaching = true;
-        guard.docker.clone()
+        guard.attaching = true;
+        state.docker.clone()
     };
-
-    println!("Worldserver attach");
 
     let AttachContainerResults { output, input } = docker
         .attach_container("ac-worldserver", Some(get_options()))
@@ -95,10 +92,10 @@ pub async fn attach_worldserver(
     spawn_worldserver_output_thread(app, output, Arc::clone(state.inner()));
 
     {
-        let mut guard = state.lock().await;
-        guard.worldserver.input = Some(shared_input);
-        guard.worldserver.attached = true;
-        guard.worldserver.attaching = false;
+        let mut guard = state.worldserver.lock().await;
+        guard.input = Some(shared_input);
+        guard.attached = true;
+        guard.attaching = false;
     }
 
     Ok(())
