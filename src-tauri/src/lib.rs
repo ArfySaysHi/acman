@@ -15,6 +15,7 @@ pub fn run() {
         Docker::connect_with_local_defaults()
             .expect("Failed to connect to Docker - is it running?"),
     );
+    println!("{:?}", docker);
     let worldserver = Mutex::new(WorldServerState {
         input: None,
         attached: false,

@@ -7,11 +7,7 @@ use futures_util::{Stream, StreamExt};
 use std::pin::Pin;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
-use tokio::sync::{Mutex, MutexGuard};
-
-fn is_attaching(guard: &MutexGuard<'_, WorldServerState>) -> bool {
-    guard.attached || guard.attaching
-}
+use tokio::sync::Mutex;
 
 fn get_options() -> AttachContainerOptions {
     AttachContainerOptionsBuilder::default()
@@ -74,14 +70,15 @@ pub async fn attach_worldserver(
     app: AppHandle,
     state: State<'_, SharedAppState>,
 ) -> Result<(), String> {
-    let docker = {
-        let mut guard = state.worldserver.lock().await;
-        if is_attaching(&guard) {
-            return Ok(());
-        }
-        guard.attaching = true;
-        state.docker.clone()
-    };
+    let mut guard = state.worldserver.lock().await;
+
+    // Optional: prevent re-attaching if already attached
+    if guard.attached {
+        println!("Already attached, skipping");
+        return Ok(());
+    }
+
+    let docker = state.docker.clone();
 
     let AttachContainerResults { output, input } = docker
         .attach_container("ac-worldserver", Some(get_options()))
@@ -89,14 +86,13 @@ pub async fn attach_worldserver(
         .map_err(|e| e.to_string())?;
 
     let shared_input = Arc::new(Mutex::new(input));
+
+    // You can spawn this without holding the lock since it doesn't need `guard`
     spawn_worldserver_output_thread(app, output, Arc::clone(state.inner()));
 
-    {
-        let mut guard = state.worldserver.lock().await;
-        guard.input = Some(shared_input);
-        guard.attached = true;
-        guard.attaching = false;
-    }
+    // Still holding the lock here → safe
+    guard.input = Some(shared_input);
+    guard.attached = true;
 
     Ok(())
 }
