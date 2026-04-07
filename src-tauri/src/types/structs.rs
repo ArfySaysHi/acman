@@ -14,7 +14,6 @@ pub struct AppState {
 pub struct WorldServerState {
     pub input: Option<Arc<Mutex<Pin<Box<dyn AsyncWrite + Send>>>>>,
     pub attached: bool,
-    pub attaching: bool,
 }
 
 pub struct PatchState {

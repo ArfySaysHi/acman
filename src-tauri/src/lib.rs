@@ -19,7 +19,6 @@ pub fn run() {
     let worldserver = Mutex::new(WorldServerState {
         input: None,
         attached: false,
-        attaching: false,
     });
     let patch = Mutex::new(PatchState {
         client_path: None,
