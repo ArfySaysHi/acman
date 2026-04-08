@@ -1,5 +1,5 @@
 use bollard::Docker;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -10,7 +10,7 @@ use tokio::sync::Mutex;
 pub struct AppState {
     pub docker: Arc<Docker>,
     pub worldserver: Mutex<WorldServerState>,
-    pub patch: Mutex<PatchState>,
+    pub settings: Mutex<Settings>,
 }
 
 #[allow(dead_code)]
@@ -20,9 +20,9 @@ pub struct WorldServerState {
 }
 
 #[allow(dead_code)]
-pub struct PatchState {
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct Settings {
     pub client_path: Option<PathBuf>,
-    pub dbc_cache_path: Option<PathBuf>,
 }
 
 pub type SharedAppState = Arc<AppState>;

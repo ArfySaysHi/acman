@@ -7,6 +7,7 @@ use types::structs::*;
 
 mod commands;
 use commands::docker::get_docker_event_stream::get_docker_event_stream;
+use commands::settings::load_settings::load_settings;
 use commands::worldserver::*;
 
 mod helpers;
@@ -22,23 +23,22 @@ pub fn run() {
         attached: false,
     });
 
-    let patch = Mutex::new(PatchState {
-        client_path: None,
-        dbc_cache_path: None,
-    });
+    let settings = Mutex::new(Settings { client_path: None });
 
     let state = Arc::new(AppState {
         docker: docker,
         worldserver: worldserver,
-        patch: patch,
+        settings: settings,
     });
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             get_docker_event_stream,
             attach_worldserver,
-            send_ws_command
+            send_ws_command,
+            load_settings
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");
