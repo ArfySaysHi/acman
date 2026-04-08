@@ -8,6 +8,11 @@ interface UseStreamOptions {
   container: string;
 }
 
+export interface ServerStream {
+  stream: string;
+  connected: boolean;
+}
+
 const useStream = ({ listener, attach, container }: UseStreamOptions) => {
   const [stream, setStream] = useState("");
   const [connected, setConnected] = useState(false);

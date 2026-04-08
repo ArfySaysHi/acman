@@ -1,5 +1,4 @@
 import "./App.css";
-import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
 import { useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -9,8 +8,15 @@ import WorldServer from "./pages/WorldServer";
 import Database from "./pages/Database";
 import DatabaseTable from "./pages/DatabaseTable";
 import Settings from "./pages/Settings";
+import useStream from "./hooks/useStream";
 
 function App() {
+  const worldserverSocket = useStream({
+    attach: "attach_worldserver",
+    listener: "worldserver-output",
+    container: "ac-worldserver",
+  });
+
   const strictModePlacator = useRef(false);
 
   useEffect(() => {
@@ -30,11 +36,13 @@ function App() {
       <div className="flex h-screen bg-gray-900 text-green-400">
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
-          <Header connected />
           <div className="flex-1 overflow-auto p-4">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/worldserver" element={<WorldServer />} />
+              <Route
+                path="/worldserver"
+                element={<WorldServer worldserverSocket={worldserverSocket} />}
+              />
               <Route path="/database" element={<Database />} />
               <Route path="/database/:tableName" element={<DatabaseTable />} />
               <Route path="/settings" element={<Settings />} />

@@ -53,7 +53,7 @@ fn spawn_worldserver_output_thread(
                     .join(" ");
 
                 if !normalized.is_empty() && normalized != last_line {
-                    let _ = app_clone.emit("console-output", normalized.clone());
+                    let _ = app_clone.emit("worldserver-output", normalized.clone());
                     last_line = normalized;
                 }
             }
