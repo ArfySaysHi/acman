@@ -7,7 +7,7 @@ use types::structs::*;
 
 mod commands;
 use commands::docker::get_docker_event_stream::get_docker_event_stream;
-use commands::settings::load_settings::load_settings;
+use commands::settings::*;
 use commands::worldserver::*;
 
 mod helpers;
@@ -38,7 +38,8 @@ pub fn run() {
             get_docker_event_stream,
             attach_worldserver,
             send_ws_command,
-            load_settings
+            load_settings,
+            save_settings
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

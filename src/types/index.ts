@@ -38,12 +38,3 @@ export interface MenuItem {
   icon: string;
   path: string;
 }
-
-export interface SettingItem {
-  id: string;
-  label: string;
-  description: string;
-  value: string | boolean;
-  type: "text" | "toggle" | "select";
-  options?: string[];
-}
