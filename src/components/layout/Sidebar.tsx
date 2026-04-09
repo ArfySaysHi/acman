@@ -4,11 +4,12 @@ export default function Sidebar() {
   const location = useLocation();
 
   const menuItems = [
-    { label: "Dashboard", icon: "📊", path: "/" },
-    { label: "World Server", icon: "🌍", path: "/worldserver" },
-    { label: "Database", icon: "💾", path: "/database" },
-    { label: "Settings", icon: "⚙️", path: "/settings" },
-    { label: "Temp", icon: " ", path: "/temppage" },
+    { label: "Dashboard", icon: "", path: "/" },
+    { label: "World Server", icon: "", path: "/worldserver" },
+    { label: "Database", icon: "", path: "/database" },
+    { label: "Settings", icon: "", path: "/settings" },
+    { label: "Temp", icon: "", path: "/temppage" },
+    { label: "Quick MPQ", icon: "", path: "/quickmpq" },
   ];
 
   const isActive = (path: string) => location.pathname === path;

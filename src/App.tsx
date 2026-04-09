@@ -10,6 +10,7 @@ import DatabaseTable from "./pages/DatabaseTable";
 import Settings from "./pages/Settings";
 import useStream from "./hooks/useStream";
 import CreateSpell from "./pages/create/CreateSpell";
+import QuickMpq from "./pages/QuickMpq";
 
 function App() {
   const worldserverSocket = useStream({
@@ -48,6 +49,7 @@ function App() {
               <Route path="/database/:tableName" element={<DatabaseTable />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/temppage" element={<CreateSpell />} />
+              <Route path="/quickmpq" element={<QuickMpq />} />
             </Routes>
           </div>
         </main>
