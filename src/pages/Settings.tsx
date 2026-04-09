@@ -47,9 +47,26 @@ export default function Settings(): JSX.Element {
 
       <div className="max-w-2xl space-y-6">
         <div className="bg-gray-800 p-6 rounded border border-gray-700">
-          {settings["client_path"]}
-          <br />
-          <button onMouseDown={pickClientPath}>Select Client Path</button>
+          <h3 className="text-lg font-semibold text-green-400 mb-1">
+            WoW Client Path
+          </h3>
+          <p className="text-gray-400 text-sm mb-4">
+            Path to your unmodified 3.3.5a client directory. Used as the base
+            for DBC extraction and patch output.
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono truncate">
+              {settings["client_path"] || (
+                <span className="text-gray-500">No path selected…</span>
+              )}
+            </div>
+            <button
+              onMouseDown={pickClientPath}
+              className="shrink-0 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-green-400 text-gray-300 hover:text-green-400 text-sm rounded transition-colors cursor-pointer"
+            >
+              Browse
+            </button>
+          </div>
         </div>
       </div>
 

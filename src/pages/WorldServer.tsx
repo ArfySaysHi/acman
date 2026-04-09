@@ -41,6 +41,7 @@ export default function WorldServer({
           ref={consoleRef}
           readOnly
           className="w-full bg-black text-green-400 rounded-lg resize-none"
+          tabIndex={-1}
         />
       </div>
       <div className="flex rounded-lg bg-gray-800 p-2">
@@ -48,7 +49,8 @@ export default function WorldServer({
           value={cmd}
           onChange={(e) => setCmd(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="bg-black text-green-400 rounded-sm p-2 w-full"
+          className={`bg-black text-green-400 rounded-sm p-2 w-full ${connected ? "cursor-normal" : "cursor-not-allowed"}`}
+          readOnly={!connected}
         />
       </div>
     </div>
