@@ -9,6 +9,7 @@ import Database from "./pages/Database";
 import DatabaseTable from "./pages/DatabaseTable";
 import Settings from "./pages/Settings";
 import useStream from "./hooks/useStream";
+import CreateSpell from "./pages/create/CreateSpell";
 
 function App() {
   const worldserverSocket = useStream({
@@ -46,6 +47,7 @@ function App() {
               <Route path="/database" element={<Database />} />
               <Route path="/database/:tableName" element={<DatabaseTable />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/temppage" element={<CreateSpell />} />
             </Routes>
           </div>
         </main>

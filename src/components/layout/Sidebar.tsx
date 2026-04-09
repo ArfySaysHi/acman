@@ -8,6 +8,7 @@ export default function Sidebar() {
     { label: "World Server", icon: "🌍", path: "/worldserver" },
     { label: "Database", icon: "💾", path: "/database" },
     { label: "Settings", icon: "⚙️", path: "/settings" },
+    { label: "Temp", icon: " ", path: "/temppage" },
   ];
 
   const isActive = (path: string) => location.pathname === path;
