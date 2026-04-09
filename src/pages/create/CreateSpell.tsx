@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { JSX, useState } from "react";
 
 export interface SpellFormData {
@@ -5,7 +6,7 @@ export interface SpellFormData {
   name: string;
   description: string;
   icon_id: number;
-  school: SpellSchool;
+  school: SpellSchool[];
 }
 
 export type SpellSchool =
@@ -32,7 +33,7 @@ const DEFAULT_FORM: SpellFormData = {
   name: "",
   description: "",
   icon_id: 1,
-  school: "Physical",
+  school: ["Physical"],
 };
 
 interface FieldProps {
@@ -64,7 +65,7 @@ export default function CreateSpell(): JSX.Element {
   ) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleGenerate = async () => {
-    // wire up: await invoke("generate_spell_sql", { spell: form });
+    await invoke("generate_spell_sql", { spell: form });
     setStatus("success");
     setMessage(`SQL generated for spell ${form.id} — "${form.name}"`);
   };
@@ -74,8 +75,6 @@ export default function CreateSpell(): JSX.Element {
     setStatus("idle");
     setMessage("");
   };
-
-  const selectedSchool = SPELL_SCHOOLS.find((s) => s.value === form.school)!;
 
   return (
     <div>
@@ -147,10 +146,17 @@ export default function CreateSpell(): JSX.Element {
             {SPELL_SCHOOLS.map(({ value, color }) => (
               <button
                 key={value}
-                onClick={() => set("school", value)}
+                onClick={() => {
+                  if (form.school.includes(value))
+                    set(
+                      "school",
+                      form.school.filter((v) => v !== value),
+                    );
+                  else set("school", [...form.school, value]);
+                }}
                 className={`px-3 py-2 rounded border text-sm font-semibold transition-colors cursor-pointer
                   ${
-                    form.school === value
+                    form.school.includes(value)
                       ? `bg-gray-700 border-green-400 ${color}`
                       : "bg-gray-900 border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300"
                   }`}
@@ -161,8 +167,16 @@ export default function CreateSpell(): JSX.Element {
           </div>
           <p className="text-xs text-gray-500">
             Selected:{" "}
-            <span className={`font-semibold ${selectedSchool.color}`}>
-              {form.school}
+            <span className="font-semibold">
+              {form.school.map((str, i) => (
+                <span
+                  key={i}
+                  className={`${SPELL_SCHOOLS.find(({ value }) => value === str)?.color}`}
+                >
+                  {str}
+                  {i !== form.school.length - 1 ? ", " : ""}
+                </span>
+              ))}
             </span>
           </p>
         </div>

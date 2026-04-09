@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 interface Settings {
   client_path?: string;
+  output_path?: string;
 }
 
 export default function Settings(): JSX.Element {
@@ -23,6 +24,14 @@ export default function Settings(): JSX.Element {
       title: "Select WoW Client Folder",
     });
     if (path) setSettings((prev) => ({ ...prev, client_path: path }));
+  };
+
+  const pickOutputPath = async () => {
+    const path = await open({
+      directory: true,
+      title: "Pick a folder to dump patch files",
+    });
+    if (path) setSettings((prev) => ({ ...prev, output_path: path }));
   };
 
   const handleSave = async (): Promise<void> => {
@@ -45,7 +54,7 @@ export default function Settings(): JSX.Element {
     <div>
       <h2 className="text-3xl font-bold mb-6 text-green-400">Settings</h2>
 
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-2xl space-y-6 mb-4">
         <div className="bg-gray-800 p-6 rounded border border-gray-700">
           <h3 className="text-lg font-semibold text-green-400 mb-1">
             WoW Client Path
@@ -62,6 +71,30 @@ export default function Settings(): JSX.Element {
             </div>
             <button
               onMouseDown={pickClientPath}
+              className="shrink-0 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-green-400 text-gray-300 hover:text-green-400 text-sm rounded transition-colors cursor-pointer"
+            >
+              Browse
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl space-y-6">
+        <div className="bg-gray-800 p-6 rounded border border-gray-700">
+          <h3 className="text-lg font-semibold text-green-400 mb-1">
+            Patch Output Directory
+          </h3>
+          <p className="text-gray-400 text-sm mb-4">
+            This is where any .MPQ files will be dumped.
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono truncate">
+              {settings["output_path"] || (
+                <span className="text-gray-500">No path selected…</span>
+              )}
+            </div>
+            <button
+              onMouseDown={pickOutputPath}
               className="shrink-0 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-green-400 text-gray-300 hover:text-green-400 text-sm rounded transition-colors cursor-pointer"
             >
               Browse
