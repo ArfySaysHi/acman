@@ -7,36 +7,59 @@ interface Settings {
   output_path?: string;
 }
 
+function PathField({
+  label,
+  description,
+  value,
+  onPick,
+}: {
+  label: string;
+  description: string;
+  value?: string;
+  onPick: () => void;
+}) {
+  return (
+    <div className="ayu-panel p-4">
+      <div className="text-ayu-orange text-[11px] font-semibold mb-0.5">{label}</div>
+      <div className="text-ayu-dim text-[11px] mb-3">{description}</div>
+      <div className="flex items-center gap-2">
+        <div className={`ayu-path flex-1 ${value ? "" : "empty"}`}>
+          {value ?? "No path selected…"}
+        </div>
+        <button onMouseDown={onPick} className="ayu-btn ayu-btn-ghost ayu-btn-md shrink-0">
+          Browse
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Settings(): JSX.Element {
   const [settings, setSettings] = useState<Settings>({});
+  const [saved, setSaved] = useState(false);
   const strictModePlacator = useRef<boolean>(false);
 
   useEffect(() => {
     if (strictModePlacator.current) return;
-
     strictModePlacator.current = true;
     handleLoad();
   }, []);
 
   const pickClientPath = async () => {
-    const path = await open({
-      directory: true,
-      title: "Select WoW Client Folder",
-    });
+    const path = await open({ directory: true, title: "Select WoW Client Folder" });
     if (path) setSettings((prev) => ({ ...prev, client_path: path }));
   };
 
   const pickOutputPath = async () => {
-    const path = await open({
-      directory: true,
-      title: "Pick a folder to dump patch files",
-    });
+    const path = await open({ directory: true, title: "Pick a folder to dump patch files" });
     if (path) setSettings((prev) => ({ ...prev, output_path: path }));
   };
 
-  const handleSave = async (): Promise<void> => {
+  const handleSave = async () => {
     try {
       await invoke("save_settings", { newSettings: settings });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       console.error("Failed to save settings:", err);
     }
@@ -52,64 +75,32 @@ export default function Settings(): JSX.Element {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-6 text-green-400">Settings</h2>
-
-      <div className="max-w-2xl space-y-6 mb-4">
-        <div className="bg-gray-800 p-6 rounded border border-gray-700">
-          <h3 className="text-lg font-semibold text-green-400 mb-1">
-            WoW Client Path
-          </h3>
-          <p className="text-gray-400 text-sm mb-4">
-            Path to your unmodified 3.3.5a client directory. Used as the base
-            for DBC extraction and patch output.
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono truncate">
-              {settings["client_path"] || (
-                <span className="text-gray-500">No path selected…</span>
-              )}
-            </div>
-            <button
-              onMouseDown={pickClientPath}
-              className="shrink-0 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-green-400 text-gray-300 hover:text-green-400 text-sm rounded transition-colors cursor-pointer"
-            >
-              Browse
-            </button>
-          </div>
-        </div>
+      <div className="ayu-page-header">
+        <h2 className="ayu-heading">Settings</h2>
       </div>
 
-      <div className="max-w-2xl space-y-6">
-        <div className="bg-gray-800 p-6 rounded border border-gray-700">
-          <h3 className="text-lg font-semibold text-green-400 mb-1">
-            Patch Output Directory
-          </h3>
-          <p className="text-gray-400 text-sm mb-4">
-            This is where any .MPQ files will be dumped.
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm text-gray-300 font-mono truncate">
-              {settings["output_path"] || (
-                <span className="text-gray-500">No path selected…</span>
-              )}
-            </div>
-            <button
-              onMouseDown={pickOutputPath}
-              className="shrink-0 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-green-400 text-gray-300 hover:text-green-400 text-sm rounded transition-colors cursor-pointer"
-            >
-              Browse
-            </button>
-          </div>
-        </div>
-      </div>
+      <div className="max-w-xl flex flex-col gap-2">
+        <PathField
+          label="WoW Client Path"
+          description="Path to your unmodified 3.3.5a client directory. Used as the base for DBC extraction and patch output."
+          value={settings.client_path}
+          onPick={pickClientPath}
+        />
+        <PathField
+          label="Patch Output Directory"
+          description="Where .MPQ files will be written."
+          value={settings.output_path}
+          onPick={pickOutputPath}
+        />
 
-      <div className="mt-8 flex gap-4">
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors font-semibold cursor-pointer"
-        >
-          Save Settings
-        </button>
+        <div className="mt-2">
+          <button
+            onClick={handleSave}
+            className={`ayu-btn ayu-btn-md ${saved ? "ayu-btn-green" : "ayu-btn-orange"}`}
+          >
+            {saved ? "✓ Saved" : "Save Settings"}
+          </button>
+        </div>
       </div>
     </div>
   );

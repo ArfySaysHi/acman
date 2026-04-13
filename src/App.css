@@ -1,1 +1,232 @@
 @import "tailwindcss";
+
+/* ── Ayu Dark token definitions ─────────────────────────────────── */
+@theme {
+  --color-ayu-bg:        #0d1017;
+  --color-ayu-alt:       #131721;
+  --color-ayu-panel:     #1c2333;
+  --color-ayu-border:    #252d3d;
+  --color-ayu-border-hi: #2e3a4f;
+  --color-ayu-fg:        #bfbdb6;
+  --color-ayu-dim:       #636b77;
+  --color-ayu-muted:     #3d4757;
+  --color-ayu-orange:    #ffb454;
+  --color-ayu-yellow:    #e6b450;
+  --color-ayu-green:     #7fd962;
+  --color-ayu-cyan:      #39bae6;
+  --color-ayu-blue:      #59c2ff;
+  --color-ayu-purple:    #d2a6ff;
+  --color-ayu-red:       #f07178;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+}
+
+/* ── Base styles ─────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--color-ayu-bg);
+  color: var(--color-ayu-fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 5px; height: 5px; }
+::-webkit-scrollbar-track    { background: var(--color-ayu-bg); }
+::-webkit-scrollbar-thumb    { background: var(--color-ayu-border-hi); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ayu-dim); }
+
+/* ── Selection ───────────────────────────────────────────────────── */
+::selection { background: #ffb45433; color: var(--color-ayu-fg); }
+
+/* ── Reusable component classes ──────────────────────────────────── */
+
+/* Panels / cards */
+.ayu-panel {
+  background-color: var(--color-ayu-panel);
+  border: 1px solid var(--color-ayu-border);
+  border-radius: 4px;
+}
+
+/* Section headings */
+.ayu-heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-ayu-fg);
+}
+
+/* Page header row */
+.ayu-page-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.ayu-page-header::before {
+  content: '●';
+  font-size: 10px;
+  color: var(--color-ayu-orange);
+}
+
+/* Ghost button base — colour variant via modifier classes */
+.ayu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--color-ayu-border);
+  color: var(--color-ayu-dim);
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s, background-color 0.1s;
+}
+.ayu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ayu-btn-orange { color: var(--color-ayu-orange); border-color: var(--color-ayu-orange); background-color: color-mix(in srgb, var(--color-ayu-orange) 8%, transparent); }
+.ayu-btn-orange:hover:not(:disabled) { background-color: color-mix(in srgb, var(--color-ayu-orange) 14%, transparent); }
+
+.ayu-btn-green  { color: var(--color-ayu-green);  border-color: var(--color-ayu-green);  background-color: color-mix(in srgb, var(--color-ayu-green)  8%, transparent); }
+.ayu-btn-green:hover:not(:disabled)  { background-color: color-mix(in srgb, var(--color-ayu-green)  14%, transparent); }
+
+.ayu-btn-cyan   { color: var(--color-ayu-cyan);   border-color: var(--color-ayu-border); }
+.ayu-btn-cyan:hover:not(:disabled)   { color: var(--color-ayu-cyan);  border-color: var(--color-ayu-cyan);  background-color: color-mix(in srgb, var(--color-ayu-cyan)   6%, transparent); }
+
+.ayu-btn-red    { color: var(--color-ayu-red);    border-color: var(--color-ayu-border); }
+.ayu-btn-red:hover:not(:disabled)    { color: var(--color-ayu-red);   border-color: var(--color-ayu-red);   background-color: color-mix(in srgb, var(--color-ayu-red)    6%, transparent); }
+
+.ayu-btn-ghost  { color: var(--color-ayu-dim);    border-color: var(--color-ayu-border); }
+.ayu-btn-ghost:hover:not(:disabled)  { color: var(--color-ayu-fg);    background-color: color-mix(in srgb, white 3%, transparent); }
+
+.ayu-btn-danger { color: var(--color-ayu-dim);    border-color: var(--color-ayu-border); }
+.ayu-btn-danger:hover:not(:disabled) { color: var(--color-ayu-red);   border-color: var(--color-ayu-red); }
+
+/* Padded variant for larger buttons */
+.ayu-btn-md { padding: 0.375rem 0.875rem; font-size: 11px; }
+
+/* Text inputs */
+.ayu-input {
+  background-color: var(--color-ayu-bg);
+  border: 1px solid var(--color-ayu-border);
+  border-radius: 4px;
+  color: var(--color-ayu-fg);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0.375rem 0.625rem;
+  outline: none;
+  transition: border-color 0.1s;
+}
+.ayu-input:focus  { border-color: var(--color-ayu-orange); }
+.ayu-input::placeholder { color: var(--color-ayu-muted); }
+.ayu-input:read-only { color: var(--color-ayu-muted); cursor: not-allowed; }
+
+/* Path display box */
+.ayu-path {
+  background-color: var(--color-ayu-bg);
+  border: 1px solid var(--color-ayu-border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0.375rem 0.625rem;
+  color: var(--color-ayu-fg);
+  min-height: 32px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ayu-path.empty { color: var(--color-ayu-muted); }
+
+/* Table */
+.ayu-table { width: 100%; border-collapse: collapse; }
+.ayu-table thead tr {
+  background-color: var(--color-ayu-panel);
+  border-bottom: 1px solid var(--color-ayu-border);
+}
+.ayu-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ayu-orange);
+}
+.ayu-table th.actions { color: var(--color-ayu-dim); }
+.ayu-table td { padding: 0.375rem 0.75rem; font-size: 11px; }
+.ayu-table tbody tr { border-bottom: 1px solid var(--color-ayu-border); transition: background 0.1s; }
+.ayu-table tbody tr:hover { background-color: color-mix(in srgb, white 2%, transparent); }
+.ayu-table tbody tr.editing { background-color: color-mix(in srgb, var(--color-ayu-orange) 4%, transparent); }
+
+/* Sidebar nav link */
+.ayu-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-ayu-dim);
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  transition: color 0.1s, background-color 0.1s, border-color 0.1s;
+}
+.ayu-nav-link:hover {
+  color: var(--color-ayu-fg);
+  background-color: color-mix(in srgb, white 3%, transparent);
+}
+.ayu-nav-link.active {
+  color: var(--color-ayu-orange);
+  background-color: color-mix(in srgb, var(--color-ayu-orange) 8%, transparent);
+  border-left-color: var(--color-ayu-orange);
+}
+
+/* Database table cards */
+.ayu-db-card {
+  display: block;
+  padding: 1rem;
+  border-radius: 4px;
+  background-color: var(--color-ayu-panel);
+  border: 1px solid var(--color-ayu-border);
+  text-decoration: none;
+  transition: border-color 0.1s, background-color 0.1s;
+}
+.ayu-db-card:hover {
+  border-color: var(--color-ayu-orange);
+  background-color: color-mix(in srgb, var(--color-ayu-orange) 4%, transparent);
+}
+
+/* Console textarea */
+.ayu-console {
+  background: transparent;
+  color: var(--color-ayu-green);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+}
+.ayu-console::placeholder { color: var(--color-ayu-muted); font-style: italic; }
+
+/* Status dot */
+.ayu-dot-connected    { width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-ayu-green); display: inline-block; }
+.ayu-dot-disconnected { width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-ayu-red);   display: inline-block; }
+
+/* Error banner */
+.ayu-error {
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 11px;
+  background-color: color-mix(in srgb, var(--color-ayu-red) 8%, transparent);
+  border: 1px solid var(--color-ayu-red);
+  color: var(--color-ayu-red);
+}

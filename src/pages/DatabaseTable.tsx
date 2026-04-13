@@ -10,60 +10,43 @@ export default function DatabaseTable(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadTableData = async (): Promise<void> => {
+    const loadTableData = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Replace with your actual API call
-        // const result = await invoke("get_table_data", { table: tableName });
-        // setData(result);
-
-        // Mock data for demonstration
         const mockData: TableRow[] = Array.from({ length: 10 }, (_, i) => ({
           id: i + 1,
           name: `Item ${i + 1}`,
           value: Math.floor(Math.random() * 1000),
-          status: ["active", "inactive", "pending"][
-            Math.floor(Math.random() * 3)
-          ],
+          status: ["active", "inactive", "pending"][Math.floor(Math.random() * 3)],
         }));
         setData(mockData);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load table data",
-        );
-        console.error("Failed to load table data:", err);
+        setError(err instanceof Error ? err.message : "Failed to load table data");
       } finally {
         setLoading(false);
       }
     };
-
-    if (tableName) {
-      loadTableData();
-    }
+    if (tableName) loadTableData();
   }, [tableName]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400">Loading table data...</div>
+      <div className="flex items-center justify-center h-full text-ayu-dim text-[12px]">
+        Loading…
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="bg-red-900 bg-opacity-30 border border-red-600 text-red-400 p-4 rounded">
-        Error: {error}
-      </div>
-    );
+    return <div className="ayu-error">{error}</div>;
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-green-400">{tableName} Table</h2>
-        <span className="text-gray-400">{data.length} rows</span>
+      <div className="ayu-page-header">
+        <h2 className="ayu-heading">{tableName}</h2>
+        <span className="text-ayu-muted text-[11px]">— {data.length} rows</span>
       </div>
       <TableEditor tableName={tableName || ""} data={data} />
     </div>

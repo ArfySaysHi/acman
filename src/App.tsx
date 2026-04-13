@@ -23,28 +23,20 @@ function App() {
 
   useEffect(() => {
     if (strictModePlacator.current) return;
-
     strictModePlacator.current = true;
-
-    const setupDockerEvents = async () => {
-      await invoke("get_docker_event_stream");
-    };
-
+    const setupDockerEvents = async () => { await invoke("get_docker_event_stream"); };
     setupDockerEvents();
   }, []);
 
   return (
     <BrowserRouter>
-      <div className="flex h-screen bg-gray-900 text-green-400">
+      <div className="flex h-screen overflow-hidden bg-ayu-bg text-ayu-fg">
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto p-5">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route
-                path="/worldserver"
-                element={<WorldServer worldserverSocket={worldserverSocket} />}
-              />
+              <Route path="/worldserver" element={<WorldServer worldserverSocket={worldserverSocket} />} />
               <Route path="/database" element={<Database />} />
               <Route path="/database/:tableName" element={<DatabaseTable />} />
               <Route path="/settings" element={<Settings />} />

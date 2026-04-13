@@ -28,58 +28,45 @@ export default function TableRow({
 }: TableRowProps): JSX.Element {
   if (isEditing) {
     return (
-      <tr className="bg-gray-800 border-b border-gray-700">
-        {columns.map((column) => (
-          <td key={column} className="px-4 py-3">
+      <tr className="editing">
+        {columns.map((col) => (
+          <td key={col}>
             <input
               type="text"
-              value={String(editValues[column]) ?? ""}
-              onChange={(e) => onChange(column, e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-green-400 focus:outline-none focus:border-green-400"
+              value={String(editValues[col] ?? "")}
+              onChange={(e) => onChange(col, e.target.value)}
+              className="ayu-input w-full"
             />
           </td>
         ))}
-        <td className="px-4 py-3 space-x-2 flex">
-          <button
-            onClick={onSave}
-            disabled={loading}
-            className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
-          <button
-            onClick={onCancel}
-            disabled={loading}
-            className="px-3 py-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-gray-300 text-sm rounded transition-colors"
-          >
-            Cancel
-          </button>
+        <td>
+          <div className="flex items-center gap-1.5">
+            <button onClick={onSave} disabled={loading} className="ayu-btn ayu-btn-green">
+              {loading ? "…" : "Save"}
+            </button>
+            <button onClick={onCancel} disabled={loading} className="ayu-btn ayu-btn-ghost">
+              Cancel
+            </button>
+          </div>
         </td>
       </tr>
     );
   }
 
   return (
-    <tr className="border-b border-gray-700 hover:bg-gray-800 transition-colors">
-      {columns.map((column) => (
-        <td key={column} className="px-4 py-3 text-gray-300">
-          <span className="block truncate">{row[column]}</span>
+    <tr>
+      {columns.map((col) => (
+        <td key={col}>
+          <span className="block truncate text-ayu-fg max-w-[180px]">
+            {String(row[col])}
+          </span>
         </td>
       ))}
-      <td className="px-4 py-3 space-x-2 flex">
-        <button
-          onClick={onEdit}
-          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-        >
-          Edit
-        </button>
-        <button
-          onClick={onDelete}
-          disabled={loading}
-          className="px-3 py-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm rounded transition-colors"
-        >
-          Delete
-        </button>
+      <td>
+        <div className="flex items-center gap-1.5">
+          <button onClick={onEdit} className="ayu-btn ayu-btn-cyan">Edit</button>
+          <button onClick={onDelete} disabled={loading} className="ayu-btn ayu-btn-red">Delete</button>
+        </div>
       </td>
     </tr>
   );
