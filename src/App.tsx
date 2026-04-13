@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import useStream from "./hooks/useStream";
 import CreateSpell from "./pages/create/CreateSpell";
 import QuickMpq from "./pages/QuickMpq";
+import Mpq from "./pages/Mpq";
 
 function App() {
   const worldserverSocket = useStream({
@@ -24,7 +25,9 @@ function App() {
   useEffect(() => {
     if (strictModePlacator.current) return;
     strictModePlacator.current = true;
-    const setupDockerEvents = async () => { await invoke("get_docker_event_stream"); };
+    const setupDockerEvents = async () => {
+      await invoke("get_docker_event_stream");
+    };
     setupDockerEvents();
   }, []);
 
@@ -36,12 +39,16 @@ function App() {
           <div className="flex-1 overflow-auto p-5">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/worldserver" element={<WorldServer worldserverSocket={worldserverSocket} />} />
+              <Route
+                path="/worldserver"
+                element={<WorldServer worldserverSocket={worldserverSocket} />}
+              />
               <Route path="/database" element={<Database />} />
               <Route path="/database/:tableName" element={<DatabaseTable />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/temppage" element={<CreateSpell />} />
               <Route path="/quickmpq" element={<QuickMpq />} />
+              <Route path="/mpq" element={<Mpq />} />
             </Routes>
           </div>
         </main>

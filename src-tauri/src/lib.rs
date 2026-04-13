@@ -4,6 +4,7 @@ use std::sync::atomic::AtomicU32;
 use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 mod types;
 use types::structs::*;
@@ -40,7 +41,7 @@ pub fn run() {
         docker: docker,
         worldserver: worldserver,
         settings: settings,
-        mpqs: Mutex::new(HashMap::new()),
+        mpqs: RwLock::new(HashMap::new()),
         next_mpq_id: AtomicU32::new(1),
     });
 
@@ -64,7 +65,8 @@ pub fn run() {
             generate_spell_sql,
             open_mpq,
             close_mpq,
-            list_files
+            list_files,
+            list_mpqs
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

@@ -6,7 +6,7 @@ use std::pin::Pin;
 use std::sync::atomic::AtomicU32;
 use std::sync::Arc;
 use tokio::io::AsyncWrite;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 use wow_mpq::Archive;
 
 #[allow(dead_code)]
@@ -14,13 +14,20 @@ pub struct AppState {
     pub docker: Arc<Docker>,
     pub worldserver: Mutex<WorldServerState>,
     pub settings: Mutex<Settings>,
-    pub mpqs: Mutex<HashMap<u32, Arc<Mutex<MpqInstance>>>>,
+    pub mpqs: RwLock<HashMap<u32, Arc<Mutex<MpqInstance>>>>,
     pub next_mpq_id: AtomicU32,
 }
 
 #[allow(dead_code)]
 pub struct MpqInstance {
     pub archive: Archive,
+    pub path: PathBuf,
+    pub name: String,
+    pub dirty: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MpqMetadata {
     pub path: PathBuf,
     pub name: String,
     pub dirty: bool,

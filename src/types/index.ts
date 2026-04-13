@@ -38,3 +38,9 @@ export interface MenuItem {
   icon: string;
   path: string;
 }
+
+export interface MpqMetadata {
+  path: string;
+  name: string;
+  dirty: boolean;
+}

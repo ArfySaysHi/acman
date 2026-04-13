@@ -5,6 +5,7 @@ const menuItems = [
   { label: "World Server", path: "/worldserver" },
   { label: "Database", path: "/database" },
   { label: "Quick MPQ", path: "/quickmpq" },
+  { label: "MPQ Editing", path: "/mpq" },
   { label: "Settings", path: "/settings" },
   { label: "Temp", path: "/temppage" },
 ];
