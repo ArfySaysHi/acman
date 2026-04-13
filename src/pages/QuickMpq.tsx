@@ -6,6 +6,8 @@ export default function QuickMpq() {
   const [path, setPath] = useState<string | null>(null);
   const [converting, setConverting] = useState<boolean>(false);
 
+  const [activeMpqPath, setActiveMpqPath] = useState<string | null>(null);
+
   const selectPath = async () => {
     const path = await open({
       directory: true,
@@ -27,9 +29,28 @@ export default function QuickMpq() {
     }
   };
 
+  const selectActiveMpq = async () => {
+    const path = await open({ title: "Select MPQ file to open" });
+    setActiveMpqPath(path);
+  };
+
+  const testFn = async () => {
+    const res = await invoke("list_files", { path: activeMpqPath });
+    console.log(res);
+  };
+
   return (
     <div className="max-w-md mx-auto p-6 bg-gray-900 rounded-2xl shadow-lg border border-gray-800">
       <h2 className="text-3xl font-bold mb-4 text-green-400">Quick MPQ</h2>
+
+      <div>
+        <h2>Test MPQ Actions</h2>
+        <div>
+          <p>{activeMpqPath ?? "No MPQ open"}</p>
+          <button onMouseDown={selectActiveMpq}>Select MPQ</button>
+        </div>
+        <button onMouseDown={testFn}>List</button>
+      </div>
 
       <div className="mb-6 text-gray-300">
         <span className="font-semibold text-gray-400">Current Path:</span>

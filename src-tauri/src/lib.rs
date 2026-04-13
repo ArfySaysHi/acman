@@ -1,4 +1,6 @@
 use bollard::Docker;
+use std::collections::HashMap;
+use std::sync::atomic::AtomicU32;
 use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex;
@@ -8,6 +10,7 @@ use types::structs::*;
 
 mod commands;
 use commands::docker::*;
+use commands::mpq::*;
 use commands::patch::*;
 use commands::settings::*;
 use commands::spells::*;
@@ -37,6 +40,8 @@ pub fn run() {
         docker: docker,
         worldserver: worldserver,
         settings: settings,
+        mpqs: Mutex::new(HashMap::new()),
+        next_mpq_id: AtomicU32::new(1),
     });
 
     tauri::Builder::default()
@@ -56,7 +61,10 @@ pub fn run() {
             load_settings,
             save_settings,
             path_to_mpq,
-            generate_spell_sql
+            generate_spell_sql,
+            open_mpq,
+            close_mpq,
+            list_files
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

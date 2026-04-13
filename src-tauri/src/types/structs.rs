@@ -1,16 +1,29 @@
 use bollard::Docker;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::pin::Pin;
+use std::sync::atomic::AtomicU32;
 use std::sync::Arc;
 use tokio::io::AsyncWrite;
 use tokio::sync::Mutex;
+use wow_mpq::Archive;
 
 #[allow(dead_code)]
 pub struct AppState {
     pub docker: Arc<Docker>,
     pub worldserver: Mutex<WorldServerState>,
     pub settings: Mutex<Settings>,
+    pub mpqs: Mutex<HashMap<u32, Arc<Mutex<MpqInstance>>>>,
+    pub next_mpq_id: AtomicU32,
+}
+
+#[allow(dead_code)]
+pub struct MpqInstance {
+    pub archive: Archive,
+    pub path: PathBuf,
+    pub name: String,
+    pub dirty: bool,
 }
 
 #[allow(dead_code)]
@@ -73,6 +86,29 @@ impl SpellSchool {
             SpellSchool::Frost => 16,
             SpellSchool::Shadow => 32,
             SpellSchool::Arcane => 64,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileEntry {
+    pub name: String,
+    pub size: u64,
+    pub compressed_size: u64,
+    pub flags: u32,
+    pub hashes: Option<(u32, u32)>,
+    pub table_indices: Option<(usize, Option<usize>)>,
+}
+
+impl From<wow_mpq::FileEntry> for FileEntry {
+    fn from(fe: wow_mpq::FileEntry) -> Self {
+        Self {
+            name: fe.name,
+            size: fe.size,
+            compressed_size: fe.compressed_size,
+            flags: fe.flags,
+            hashes: fe.hashes,
+            table_indices: fe.table_indices,
         }
     }
 }
