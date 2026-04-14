@@ -8,6 +8,7 @@ import {
   FileEntry,
 } from "../types/zod";
 import FileExplorer from "../components/mpq/FileExplorer";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 
 function toPrefix(path: string): string {
   return path === "/"
@@ -74,7 +75,31 @@ export default function Mpq() {
     if (mounted.current) return;
     mounted.current = true;
 
+    let unlisten: (() => void) | undefined;
+    const setupListener = async () => {
+      await getCurrentWebview()
+        .listen("tauri://drag-drop", async (event) => {
+          const { paths } = event.payload as { paths: string[] };
+
+          await Promise.allSettled(
+            paths.map(async (path) => {
+              await invoke("open_mpq", { path });
+            }),
+          );
+
+          await refreshMpqs();
+        })
+        .then((fn) => {
+          unlisten = fn;
+        });
+    };
     refreshMpqs();
+    setupListener();
+
+    return () => {
+      mounted.current = false;
+      if (unlisten) unlisten?.();
+    };
   }, []);
 
   useEffect(() => {
