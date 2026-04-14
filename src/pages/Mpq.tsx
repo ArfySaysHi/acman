@@ -97,7 +97,7 @@ export default function Mpq() {
   };
 
   const fetchFiles = async (id: string | null) => {
-    if (id === null) return;
+    if (!id) return;
     if (fileCache[id]) return; // cache hit — nothing to do
     setLoading(true);
     try {
@@ -112,13 +112,25 @@ export default function Mpq() {
 
   const selectPath = async () => {
     try {
-      const filePath = await open({ title: "Select an MPQ" });
-      const id = await invoke("open_mpq", { path: filePath });
-      if (typeof id !== "number")
-        return console.error("Non-number value returned");
-      await refreshMpqs().then(() => {
-        setActiveMpq(`${id}`);
+      const paths: string[] | null = await open({
+        title: "Select an MPQ",
+        multiple: true,
       });
+
+      if (!paths || paths.length === 0) return;
+
+      await Promise.allSettled(
+        paths.map(async (path) => {
+          const id = await invoke("open_mpq", { path });
+
+          if (typeof id !== "number")
+            return console.error("Non-number value returned");
+
+          return id;
+        }),
+      );
+
+      await refreshMpqs();
     } catch (err) {
       console.error("Failed to open MPQ archive:", err);
     }
