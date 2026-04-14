@@ -1,8 +1,10 @@
+pub mod add_file;
 pub mod close_mpq;
 pub mod list_files;
 pub mod list_mpqs;
 pub mod open_mpq;
 
+pub use add_file::*;
 pub use close_mpq::*;
 pub use list_files::*;
 pub use list_mpqs::*;

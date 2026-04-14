@@ -5,14 +5,14 @@ use std::{
     sync::{atomic::Ordering, Arc},
 };
 use tokio::sync::Mutex;
-use wow_mpq::Archive;
+use wow_mpq::MutableArchive;
 
 #[tauri::command]
 pub async fn open_mpq(
     state: tauri::State<'_, SharedAppState>,
     path: String,
 ) -> Result<u32, String> {
-    let archive = Archive::open(&path).map_err(|e| e.to_string())?;
+    let archive = MutableArchive::open(&path).map_err(|e| e.to_string())?;
 
     let path = PathBuf::from_str(&path).map_err(|e| e.to_string())?;
 

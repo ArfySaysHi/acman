@@ -7,7 +7,7 @@ use std::sync::atomic::AtomicU32;
 use std::sync::Arc;
 use tokio::io::AsyncWrite;
 use tokio::sync::{Mutex, RwLock};
-use wow_mpq::Archive;
+use wow_mpq::MutableArchive;
 
 #[allow(dead_code)]
 pub struct AppState {
@@ -20,7 +20,7 @@ pub struct AppState {
 
 #[allow(dead_code)]
 pub struct MpqInstance {
-    pub archive: Archive,
+    pub archive: MutableArchive,
     pub path: PathBuf,
     pub name: String,
     pub dirty: bool,

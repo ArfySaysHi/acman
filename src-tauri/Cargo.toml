@@ -27,5 +27,5 @@ tokio = "1.50.0"
 futures-util = "0.3.32"
 regex = "1.12.3"
 tauri-plugin-dialog = "2"
-wow-mpq = "0.3.2"
+wow-mpq = "0.6.4"
 

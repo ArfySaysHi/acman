@@ -66,7 +66,8 @@ pub fn run() {
             open_mpq,
             close_mpq,
             list_files,
-            list_mpqs
+            list_mpqs,
+            add_file
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");
