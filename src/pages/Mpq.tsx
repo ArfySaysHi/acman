@@ -80,7 +80,9 @@ export default function Mpq() {
   useEffect(() => {
     setPath("/");
     fetchFiles(activeMpq);
-  }, [activeMpq]);
+    let keys = Object.keys(mpqs);
+    if (activeMpq === null && keys.length > 0) setActiveMpq(keys[0]);
+  }, [activeMpq, mpqs]);
 
   const refreshMpqs = async () => {
     try {
@@ -88,8 +90,7 @@ export default function Mpq() {
       const data = ZMpqMetadataMap.parse(res);
       setMpqs(data);
       setPath("/");
-      const keys = Object.keys(data);
-      if (keys.length > 0 && activeMpq === null) setActiveMpq(keys[0]);
+      return data;
     } catch (err) {
       console.error("Failed to refresh MPQs:", err);
     }
@@ -115,8 +116,9 @@ export default function Mpq() {
       const id = await invoke("open_mpq", { path: filePath });
       if (typeof id !== "number")
         return console.error("Non-number value returned");
-      await refreshMpqs();
-      setActiveMpq(`${id}`);
+      await refreshMpqs().then(() => {
+        setActiveMpq(`${id}`);
+      });
     } catch (err) {
       console.error("Failed to open MPQ archive:", err);
     }
@@ -128,16 +130,23 @@ export default function Mpq() {
   const closeMpq = async (k: string) => {
     try {
       await invoke("close_mpq", { id: Number(k) });
-      refreshMpqs();
+      const data = await refreshMpqs();
       setFileCache((prev) => {
         let newObj = { ...prev };
         delete newObj[k];
         return newObj;
       });
+
+      if (data) {
+        let keys = Object.keys(data);
+        setActiveMpq(keys[keys.length - 1]);
+      }
     } catch (err) {
       console.error("Failed to close MPQ:", err);
     }
   };
+
+  const mpqsOpen = Object.keys(mpqs).length > 0;
 
   return (
     <div>
@@ -148,26 +157,32 @@ export default function Mpq() {
         </button>
       </div>
 
-      <div className="ayu-muted mb-1">
-        Left-click: Open | Right-click: Close
-      </div>
+      {mpqsOpen ? (
+        <div className="ayu-muted mb-1">
+          Left-click: Open | Right-click: Close
+        </div>
+      ) : null}
 
       <div
         className="ayu-panel p-2 mb-4"
         onContextMenu={(e) => e.preventDefault()}
       >
-        {Object.keys(mpqs).map((k) => (
-          <button
-            key={k}
-            className={`ayu-btn ${activeMpq === k ? "ayu-btn-orange" : "ayu-btn-ghost"}`}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.button === 2 ? closeMpq(k) : setActiveMpq(k);
-            }}
-          >
-            {mpqs[k].name}
-          </button>
-        ))}
+        {mpqsOpen ? (
+          Object.keys(mpqs).map((k) => (
+            <button
+              key={k}
+              className={`ayu-btn ${activeMpq === k ? "ayu-btn-orange" : "ayu-btn-ghost"} mr-1`}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.button === 2 ? closeMpq(k) : setActiveMpq(k);
+              }}
+            >
+              {mpqs[k].name}
+            </button>
+          ))
+        ) : (
+          <div>Use the Create or Import MPQ option to see files.</div>
+        )}
       </div>
 
       <FileExplorer

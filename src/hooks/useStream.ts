@@ -25,11 +25,10 @@ const useStream = ({ listener, attach, container }: UseStreamOptions) => {
 
   const tryAttach = async (onSuccess: () => void) => {
     try {
-      const res = await invoke(attach);
-      console.log(res);
+      await invoke(attach);
       onSuccess();
-    } catch {
-      // stay disconnected
+    } catch (err) {
+      console.error("Failed to attach in useStream:", err);
     }
   };
 
