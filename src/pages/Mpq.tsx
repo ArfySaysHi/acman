@@ -87,6 +87,7 @@ export default function Mpq() {
       const res = await invoke("list_mpqs");
       const data = ZMpqMetadataMap.parse(res);
       setMpqs(data);
+      setPath("/");
       const keys = Object.keys(data);
       if (keys.length > 0 && activeMpq === null) setActiveMpq(keys[0]);
     } catch (err) {
@@ -124,6 +125,20 @@ export default function Mpq() {
   const navigate = (segment: string) => setPath((p) => joinPath(p, segment));
   const navigateTo = (idx: number) => setPath((p) => trimPath(p, idx));
 
+  const closeMpq = async (k: string) => {
+    try {
+      await invoke("close_mpq", { id: Number(k) });
+      refreshMpqs();
+      setFileCache((prev) => {
+        let newObj = { ...prev };
+        delete newObj[k];
+        return newObj;
+      });
+    } catch (err) {
+      console.error("Failed to close MPQ:", err);
+    }
+  };
+
   return (
     <div>
       <div className="ayu-page-header">
@@ -133,12 +148,22 @@ export default function Mpq() {
         </button>
       </div>
 
-      <div className="ayu-panel p-2 mb-4">
+      <div className="ayu-muted mb-1">
+        Left-click: Open | Right-click: Close
+      </div>
+
+      <div
+        className="ayu-panel p-2 mb-4"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         {Object.keys(mpqs).map((k) => (
           <button
             key={k}
             className={`ayu-btn ${activeMpq === k ? "ayu-btn-orange" : "ayu-btn-ghost"}`}
-            onMouseDown={() => setActiveMpq(k)}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.button === 2 ? closeMpq(k) : setActiveMpq(k);
+            }}
           >
             {mpqs[k].name}
           </button>
