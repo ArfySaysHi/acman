@@ -83,7 +83,8 @@ export default function Mpq() {
 
           await Promise.allSettled(
             paths.map(async (path) => {
-              await invoke("open_mpq", { path });
+              if (path.toLowerCase().endsWith(".mpq"))
+                await invoke("open_mpq", { path });
             }),
           );
 
@@ -103,11 +104,14 @@ export default function Mpq() {
   }, []);
 
   useEffect(() => {
-    setPath("/");
-    fetchFiles(activeMpq);
     let keys = Object.keys(mpqs);
     if (activeMpq === null && keys.length > 0) setActiveMpq(keys[0]);
-  }, [activeMpq, mpqs]);
+  }, [mpqs]);
+
+  useEffect(() => {
+    setPath("/");
+    fetchFiles(activeMpq);
+  }, [activeMpq]);
 
   const refreshMpqs = async () => {
     try {
