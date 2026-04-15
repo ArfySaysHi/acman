@@ -25,6 +25,12 @@ export function trimPath(current: string, crumbIndex: number): string {
   return "/" + parts.slice(0, crumbIndex + 1).join("/");
 }
 
+export function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export function filterEntries(files: FileEntry[], path: string): ViewEntry[] {
   const prefix = toPrefix(path);
   const seen = new Set<string>();

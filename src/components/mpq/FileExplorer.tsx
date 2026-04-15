@@ -1,3 +1,4 @@
+import { formatBytes } from "../../helpers/mpqHelper";
 import { ViewEntry } from "../../types/zod";
 
 interface FileExplorerProps {
@@ -94,13 +95,15 @@ export default function FileExplorer({
                       <span className="text-ayu-fg">{entry.name}</span>
                     </td>
                     <td className="text-ayu-dim tabular-nums">
-                      {entry.entry.size}
+                      {formatBytes(entry.entry.size)}
                     </td>
                     <td className="text-ayu-dim tabular-nums">
-                      {entry.entry.compressed_size}
+                      {formatBytes(entry.entry.compressed_size)}
                     </td>
                     <td className="text-ayu-dim tabular-nums">
-                      {(entry.entry.size, entry.entry.compressed_size)}
+                      {formatBytes(
+                        entry.entry.size - entry.entry.compressed_size,
+                      )}
                     </td>
                     <td className="text-ayu-dim font-mono text-[10px]">
                       0x
