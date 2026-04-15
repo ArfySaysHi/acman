@@ -16,11 +16,18 @@ pub async fn add_file(
     instance
         .archive
         .add_file(&path, &archive_path, Default::default())
-        .map_err(|e| e.to_string())?;
-    instance.archive.flush().map_err(|e| e.to_string())?;
+        .map_err(|e| format!("Faileds to add file: {e}"))?;
+
+    instance
+        .archive
+        .flush()
+        .map_err(|e| format!("Failed to flush archive: {e}"))?;
 
     let archive_path_buf = instance.path.clone();
-    instance.archive = MutableArchive::open(&archive_path_buf).map_err(|e| e.to_string())?;
+    instance.archive = MutableArchive::open(&archive_path_buf)
+        .map_err(|e| format!("Failed to reopen archive after write: {e}"))?;
+
+    instance.dirty = true;
 
     Ok(())
 }
