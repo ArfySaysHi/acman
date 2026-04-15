@@ -12,9 +12,17 @@ pub async fn open_mpq(
     state: tauri::State<'_, SharedAppState>,
     path: String,
 ) -> Result<u32, String> {
-    let archive = MutableArchive::open(&path).map_err(|e| e.to_string())?;
-
     let path = PathBuf::from_str(&path).map_err(|e| e.to_string())?;
+
+    {
+        let mpqs = state.mpqs.read().await;
+        for (id, tab) in mpqs.iter() {
+            let tab = tab.lock().await;
+            if tab.path == path {
+                return Ok(*id);
+            }
+        }
+    };
 
     let name = path
         .file_name()
@@ -22,29 +30,11 @@ pub async fn open_mpq(
         .ok_or_else(|| "Unknown filename".to_string())?
         .to_string();
 
-    let existing = {
-        let mpqs = state.mpqs.read().await;
-
-        for (id, tab) in mpqs.iter() {
-            let tab = tab.lock().await;
-
-            if tab.path == path {
-                return Ok(*id);
-            }
-        }
-
-        None
-    };
-
-    if let Some(id) = existing {
-        return Ok(id);
-    }
-
+    let archive = MutableArchive::open(&path).map_err(|e| e.to_string())?;
     let id = state.next_mpq_id.fetch_add(1, Ordering::Relaxed);
 
     {
         let mut mpqs = state.mpqs.write().await;
-
         mpqs.insert(
             id,
             Arc::new(Mutex::new(MpqInstance {
