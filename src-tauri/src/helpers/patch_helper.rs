@@ -18,7 +18,7 @@ fn add_directory(
         } else {
             let data = fs::read(&path)?;
             let relative_path = path.strip_prefix(base_path)?;
-            let mpq_path = relative_path.to_string_lossy().replace("\\", "/");
+            let mpq_path = relative_path.to_string_lossy().replace("/", "\\");
 
             builder = builder.add_file_data(data, &mpq_path);
         }
@@ -27,12 +27,17 @@ fn add_directory(
     Ok(builder)
 }
 
-pub fn path_to_mpq(input_dir: PathBuf) -> Result<(), String> {
-    let output_mpq = "output.mpq";
+pub fn path_to_mpq(input_dir: PathBuf, output_path: PathBuf) -> Result<(), String> {
+    if !input_dir.is_dir() {
+        return Err(format!(
+            "Input path is not a directory: {}",
+            input_dir.display()
+        ));
+    }
     let builder = ArchiveBuilder::new();
     let builder = add_directory(builder, &input_dir, &input_dir).map_err(|e| e.to_string())?;
 
-    builder.build(output_mpq).map_err(|e| e.to_string())?;
+    builder.build(&output_path).map_err(|e| e.to_string())?;
 
     Ok(())
 }

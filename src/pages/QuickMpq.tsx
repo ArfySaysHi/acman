@@ -8,7 +8,10 @@ export default function QuickMpq() {
   const [done, setDone] = useState(false);
 
   const selectPath = async () => {
-    const p = await open({ directory: true, title: "Select folder to convert to MPQ" });
+    const p = await open({
+      directory: true,
+      title: "Select folder to convert to MPQ",
+    });
     setPath(p);
     setDone(false);
   };
@@ -17,7 +20,7 @@ export default function QuickMpq() {
     if (converting || !path) return;
     setConverting(true);
     try {
-      await invoke("path_to_mpq", { path });
+      await invoke("path_to_mpq", { path, outputPath: "./output.mpq" });
       setDone(true);
     } catch (err) {
       console.error("Failed to create mpq:", err);
@@ -37,13 +40,18 @@ export default function QuickMpq() {
           <div className="text-ayu-dim text-[10px] uppercase tracking-wider mb-1.5">
             Source folder
           </div>
-          <div className={`ayu-path font-mono break-all ${path ? "" : "empty"}`}>
+          <div
+            className={`ayu-path font-mono break-all ${path ? "" : "empty"}`}
+          >
             {path ?? "No folder selected"}
           </div>
         </div>
 
         <div className="flex gap-2">
-          <button onMouseDown={selectPath} className="ayu-btn ayu-btn-ghost ayu-btn-md flex-1">
+          <button
+            onMouseDown={selectPath}
+            className="ayu-btn ayu-btn-ghost ayu-btn-md flex-1"
+          >
             Browse
           </button>
           <button
