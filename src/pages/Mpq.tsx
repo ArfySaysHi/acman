@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { ViewEntry } from "../types/zod";
 import FileExplorer from "../components/mpq/FileExplorer";
 import useMpqManager from "../hooks/useMpqManager";
@@ -8,18 +8,17 @@ import useDragDrop from "../hooks/useDragDrop";
 import { filterEntries, joinPath, trimPath } from "../helpers/mpqHelper";
 
 export default function Mpq() {
-  const [path, setPath] = useState<string>("/");
-  const mpq = useMpqManager(path);
+  const mpq = useMpqManager();
   useDragDrop(mpq);
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
-    return filterEntries(mpq.fileCache[mpq.activeMpq] ?? [], path);
-  }, [mpq.activeMpq, path, mpq.fileCache]);
+    return filterEntries(mpq.fileCache[mpq.activeMpq] ?? [], mpq.archivePath);
+  }, [mpq.activeMpq, mpq.archivePath, mpq.fileCache]);
 
   useEffect(() => {
     if (mpq.activeMpq) {
-      setPath("/");
+      mpq.setArchivePath("/");
       mpq.fetchFiles(mpq.activeMpq);
     }
   }, [mpq.activeMpq]);
@@ -50,8 +49,10 @@ export default function Mpq() {
     }
   };
 
-  const navigate = (segment: string) => setPath((p) => joinPath(p, segment));
-  const navigateTo = (idx: number) => setPath((p) => trimPath(p, idx));
+  const navigate = (segment: string) =>
+    mpq.setArchivePath((p) => joinPath(p, segment));
+  const navigateTo = (idx: number) =>
+    mpq.setArchivePath((p) => trimPath(p, idx));
 
   const mpqsOpen = Object.keys(mpq.mpqs).length > 0;
 
@@ -95,7 +96,7 @@ export default function Mpq() {
       <FileExplorer
         data={visibleEntries}
         loading={mpq.loading}
-        path={path}
+        path={mpq.archivePath}
         onDirClick={(val: string) => navigate(val)}
         onCrumbClick={(val: number) => navigateTo(val)}
       />

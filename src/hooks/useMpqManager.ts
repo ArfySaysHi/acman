@@ -3,11 +3,12 @@ import { MpqMetadataMap, FileEntry, ZMpqMetadataMap } from "../types/zod";
 import { invoke } from "@tauri-apps/api/core";
 import { getNameFromPath, joinPath, windowsify } from "../helpers/mpqHelper";
 
-export default function useMpqManager(currentArchivePath: string) {
+export default function useMpqManager() {
   const [mpqs, setMpqs] = useState<MpqMetadataMap>({});
   const [activeMpq, setActiveMpq] = useState<string | null>(null);
   const [fileCache, setFileCache] = useState<Record<string, FileEntry[]>>({});
   const [loading, setLoading] = useState(false);
+  const [archivePath, setArchivePath] = useState<string>("/");
 
   const activeMpqRef = useRef<string | null>(null);
   const mounted = useRef<boolean>(false);
@@ -51,6 +52,7 @@ export default function useMpqManager(currentArchivePath: string) {
     const data = await refresh();
     const keys = Object.keys(data || {});
     setActiveMpq(keys[keys.length - 1] ?? null);
+    setArchivePath("/");
   };
 
   const fetchFiles = async (id: string, force = false) => {
@@ -77,14 +79,39 @@ export default function useMpqManager(currentArchivePath: string) {
     const id = activeMpqRef.current;
     if (!id) return;
     const filename = getNameFromPath(path).trim();
-    const archivePath = windowsify(joinPath(currentArchivePath, filename));
+    const formatted = windowsify(joinPath(archivePath, filename));
 
     try {
-      await invoke("add_file", { id: Number(id), path, archivePath });
+      await invoke("add_file", {
+        id: Number(id),
+        path,
+        archivePath: formatted,
+      });
       invalidateCache(id);
       await fetchFiles(id, true);
     } catch (err) {
       console.error("Failed to add file:", err);
+    }
+  };
+
+  const addFiles = async (paths: string[]) => {
+    const id = activeMpqRef.current;
+    if (!id) return;
+
+    const filePaths = paths.map((p) =>
+      windowsify(joinPath(archivePath, getNameFromPath(p).trim())),
+    );
+
+    try {
+      await invoke("add_files", {
+        id: Number(id),
+        paths,
+        archivePaths: filePaths,
+      });
+      invalidateCache(id);
+      await fetchFiles(id, true);
+    } catch (err) {
+      console.error("Failed to add files:", err);
     }
   };
 
@@ -99,5 +126,8 @@ export default function useMpqManager(currentArchivePath: string) {
     closeMpq,
     fetchFiles,
     addFile,
+    addFiles,
+    archivePath,
+    setArchivePath,
   };
 }

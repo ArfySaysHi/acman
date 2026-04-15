@@ -17,12 +17,17 @@ export default function useDragDrop(
         "tauri://drag-drop",
         async (event) => {
           const { paths } = event.payload as { paths: string[] };
+          const mpqPaths = paths.filter((p) =>
+            p.toLowerCase().endsWith(".mpq"),
+          );
+          const genericPaths = paths.filter(
+            (p) => !p.toLowerCase().endsWith(".mpq"),
+          );
+          await managerRef.current.addFiles(genericPaths);
 
-          for (const path of paths) {
-            if (path.toLowerCase().endsWith(".mpq"))
-              await managerRef.current.openMpq(path);
-            else await managerRef.current.addFile(path);
-          }
+          mpqPaths.forEach(async (path) => {
+            await managerRef.current.openMpq(path);
+          });
         },
       );
 
