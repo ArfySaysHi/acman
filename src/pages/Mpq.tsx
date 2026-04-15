@@ -60,6 +60,9 @@ export default function Mpq() {
     <div>
       <div className="ayu-page-header">
         <h2 className="ayu-heading mr-auto">MPQ Editor</h2>
+        <button onMouseDown={mpq.createMpq} className="ayu-btn ayu-btn-green">
+          + Create MPQ
+        </button>
         <button onMouseDown={selectPath} className="ayu-btn ayu-btn-orange">
           + Import MPQ
         </button>

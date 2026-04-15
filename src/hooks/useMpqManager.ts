@@ -35,8 +35,20 @@ export default function useMpqManager() {
     return data;
   };
 
+  const createMpq = async () => {
+    try {
+      const id = await invoke("create_mpq");
+      await refresh();
+      await fetchFiles(`${id}`, true);
+      setActiveMpq(`${id}`);
+    } catch (err) {
+      console.error("Failed to create MPQ:", err);
+    }
+  };
+
   const openMpq = async (path: string) => {
-    await invoke("open_mpq", { path });
+    const id = await invoke("open_mpq", { path });
+    setActiveMpq(`${id}`);
     return refresh();
   };
 
@@ -129,5 +141,6 @@ export default function useMpqManager() {
     addFiles,
     archivePath,
     setArchivePath,
+    createMpq,
   };
 }

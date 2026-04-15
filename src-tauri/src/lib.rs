@@ -20,6 +20,7 @@ use commands::worldserver::*;
 use crate::helpers::config_helper;
 
 mod helpers;
+mod mpq;
 
 pub fn run() {
     let docker = Arc::new(
@@ -68,7 +69,8 @@ pub fn run() {
             list_files,
             list_mpqs,
             add_file,
-            add_files
+            add_files,
+            create_mpq
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");
