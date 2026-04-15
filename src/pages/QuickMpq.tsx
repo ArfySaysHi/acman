@@ -20,7 +20,7 @@ export default function QuickMpq() {
     if (converting || !path) return;
     setConverting(true);
     try {
-      await invoke("path_to_mpq", { path, outputPath: "./output.mpq" });
+      await invoke("path_to_mpq", { path });
       setDone(true);
     } catch (err) {
       console.error("Failed to create mpq:", err);
