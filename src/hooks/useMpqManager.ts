@@ -1,7 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { MpqMetadataMap, FileEntry, ZMpqMetadataMap } from "../types/zod";
 import { invoke } from "@tauri-apps/api/core";
-import { getNameFromPath, joinPath, windowsify } from "../helpers/mpqHelper";
+import {
+  getNameFromPath,
+  joinPath,
+  mergeFiles,
+  pathsToMpqFiles,
+  pathToMpqFile,
+  windowsify,
+} from "../helpers/mpqHelper";
 
 export default function useMpqManager() {
   const [mpqs, setMpqs] = useState<MpqMetadataMap>({});
@@ -39,7 +46,6 @@ export default function useMpqManager() {
     try {
       const id = await invoke("create_mpq");
       await refresh();
-      await fetchFiles(`${id}`, true);
       setActiveMpq(`${id}`);
     } catch (err) {
       console.error("Failed to create MPQ:", err);
@@ -79,31 +85,29 @@ export default function useMpqManager() {
     }
   };
 
-  const invalidateCache = (id: string) => {
-    setFileCache((p) => {
-      const next = { ...p };
-      delete next[id];
-      return next;
-    });
-  };
-
   const addFile = async (path: string) => {
     const id = activeMpqRef.current;
     if (!id) return;
     const filename = getNameFromPath(path).trim();
     const formatted = windowsify(joinPath(archivePath, filename));
+    const file = pathToMpqFile(formatted);
 
-    try {
-      await invoke("add_file", {
-        id: Number(id),
-        path,
-        archivePath: formatted,
-      });
-      invalidateCache(id);
-      await fetchFiles(id, true);
-    } catch (err) {
+    setFileCache((prev) => ({
+      ...prev,
+      [id]: mergeFiles(prev[id] || [], [file]),
+    }));
+
+    invoke("add_file", {
+      id: Number(id),
+      path,
+      archivePath: formatted,
+    }).catch((err) => {
       console.error("Failed to add file:", err);
-    }
+      setFileCache((prev) => ({
+        ...prev,
+        [id]: (prev[id] || []).filter((fe) => fe.name !== formatted),
+      }));
+    });
   };
 
   const addFiles = async (paths: string[]) => {
@@ -114,14 +118,29 @@ export default function useMpqManager() {
       windowsify(joinPath(archivePath, getNameFromPath(p).trim())),
     );
 
+    const optimisticFiles: FileEntry[] = pathsToMpqFiles(filePaths);
+
     try {
-      await invoke("add_files", {
+      setFileCache((p) => ({
+        ...p,
+        [id]: mergeFiles(p[id] || [], optimisticFiles),
+      }));
+      invoke("add_files", {
         id: Number(id),
         paths,
         archivePaths: filePaths,
+      }).catch((err) => {
+        console.error("Failed to add_files, reverting optimistic update", err);
+        setFileCache((prev) => {
+          const existing = prev[id] || [];
+
+          const rollback = existing.filter(
+            (fe) => !optimisticFiles.some((opt) => opt.name === fe.name),
+          );
+
+          return { ...prev, [id]: rollback };
+        });
       });
-      invalidateCache(id);
-      await fetchFiles(id, true);
     } catch (err) {
       console.error("Failed to add files:", err);
     }
@@ -132,30 +151,13 @@ export default function useMpqManager() {
     if (!id) return console.error("No MPQ open");
 
     const fullPath = joinPath(archivePath, path);
-    const name = fullPath + "/.keep";
+    const name = fullPath + "\\";
+    const file = pathToMpqFile(name);
 
     setFileCache((p) => ({
       ...p,
-      [id]: [
-        ...(p[id] || []),
-        {
-          name,
-          size: 0,
-          compressed_size: 0,
-          flags: 0,
-          hashes: null,
-          table_indices: null,
-        },
-      ],
+      [id]: mergeFiles(p[id] || [], [file]),
     }));
-
-    invoke("create_dir", { id: Number(id), path: fullPath }).catch((err) => {
-      console.error("Failed to create directory:", err);
-      setFileCache((p) => ({
-        ...p,
-        [id]: p[id].filter((fileEntry) => fileEntry.name === fullPath),
-      }));
-    });
   };
 
   return {

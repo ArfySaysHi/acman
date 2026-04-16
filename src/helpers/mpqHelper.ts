@@ -62,3 +62,27 @@ export function filterEntries(files: FileEntry[], path: string): ViewEntry[] {
       .sort((a, b) => a.name.localeCompare(b.name)),
   ];
 }
+
+export function pathsToMpqFiles(paths: string[]): FileEntry[] {
+  return paths.map(pathToMpqFile);
+}
+
+export function pathToMpqFile(path: string): FileEntry {
+  return {
+    name: path,
+    size: 0,
+    compressed_size: 0,
+    flags: 0,
+    hashes: null,
+    table_indices: null,
+  };
+}
+
+export function mergeFiles(
+  existing: FileEntry[],
+  incoming: FileEntry[],
+): FileEntry[] {
+  const map = new Map(existing.map((f) => [f.name, f]));
+  for (const f of incoming) map.set(f.name, f);
+  return Array.from(map.values());
+}
