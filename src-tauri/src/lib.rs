@@ -70,7 +70,8 @@ pub fn run() {
             list_mpqs,
             add_file,
             add_files,
-            create_mpq
+            create_mpq,
+            create_dir
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

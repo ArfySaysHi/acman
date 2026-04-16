@@ -8,9 +8,6 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "dialog:default",
-    "core:window:default",
-    "core:event:default",
-    "core:webview:default"
+    "dialog:default"
   ]
 }

@@ -8,8 +8,11 @@ pub async fn add_file(
     path: String,
     archive_path: String,
 ) -> Result<(), String> {
-    let guard = state.mpqs.read().await;
-    let instance_mutex = guard.get(&id).ok_or("Failed to get MPQInstance")?;
+    let instance_mutex = {
+        let guard = state.mpqs.read().await;
+        guard.get(&id).cloned().ok_or("Failed to get MPQInstance")?
+    };
+
     let mut instance = instance_mutex.lock().await;
 
     instance

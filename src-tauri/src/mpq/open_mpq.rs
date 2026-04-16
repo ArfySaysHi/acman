@@ -9,16 +9,17 @@ use wow_mpq::MutableArchive;
 
 pub async fn open_mpq(state: SharedAppState, path: String) -> Result<u32, String> {
     let path = PathBuf::from_str(&path).map_err(|e| e.to_string())?;
-
-    {
+    let instances: Vec<(u32, Arc<Mutex<MpqInstance>>)> = {
         let mpqs = state.mpqs.read().await;
-        for (id, tab) in mpqs.iter() {
-            let tab = tab.lock().await;
-            if tab.path == path {
-                return Ok(*id);
-            }
-        }
+        mpqs.iter().map(|(id, arc)| (*id, arc.clone())).collect()
     };
+
+    for (id, arc) in instances {
+        let mpq = arc.lock().await;
+        if mpq.path == path {
+            return Ok(id);
+        }
+    }
 
     let name = path
         .file_name()

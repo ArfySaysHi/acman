@@ -1,24 +1,28 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use crate::types::structs::{MpqMetadata, SharedAppState};
+use tokio::sync::Mutex;
+
+use crate::types::structs::{MpqInstance, MpqMetadata, SharedAppState};
 
 #[tauri::command]
 pub async fn list_mpqs(
     state: tauri::State<'_, SharedAppState>,
 ) -> Result<HashMap<u32, MpqMetadata>, String> {
-    let mpqs = state.mpqs.read().await;
+    let instances: Vec<(u32, Arc<Mutex<MpqInstance>>)> = {
+        let mpqs = state.mpqs.read().await;
+        mpqs.iter().map(|(id, arc)| (*id, arc.clone())).collect()
+    };
 
     let mut result: HashMap<u32, MpqMetadata> = HashMap::new();
-
-    for (id, tab) in mpqs.iter() {
-        let tab = tab.lock().await;
+    for (id, arc) in instances {
+        let mpq = arc.lock().await;
 
         result.insert(
-            *id,
+            id,
             MpqMetadata {
-                path: tab.path.clone(),
-                name: tab.name.clone(),
-                dirty: tab.dirty,
+                path: mpq.path.clone(),
+                name: mpq.name.clone(),
+                dirty: mpq.dirty,
             },
         );
     }

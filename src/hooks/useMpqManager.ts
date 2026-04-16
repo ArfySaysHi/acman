@@ -127,6 +127,16 @@ export default function useMpqManager() {
     }
   };
 
+  const createDir = async (name: string) => {
+    const id = activeMpqRef.current;
+    if (!id) return console.error("No MPQ open");
+
+    const fullPath = joinPath(archivePath, name);
+    console.log(fullPath, id);
+    const res = await invoke("create_dir", { id: Number(id), path: fullPath });
+    console.log(res);
+  };
+
   return {
     mpqs,
     activeMpq,
@@ -142,5 +152,6 @@ export default function useMpqManager() {
     archivePath,
     setArchivePath,
     createMpq,
+    createDir,
   };
 }

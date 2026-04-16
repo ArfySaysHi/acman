@@ -6,6 +6,7 @@ interface FileExplorerProps {
   path: string;
   onDirClick: (val: string) => void;
   onCrumbClick: (val: number) => void;
+  onCreateDirClick: () => void;
   loading: boolean;
 }
 
@@ -15,6 +16,7 @@ export default function FileExplorer({
   path,
   onDirClick,
   onCrumbClick,
+  onCreateDirClick,
 }: FileExplorerProps) {
   const crumbs =
     path === "/" ? [] : path.replace(/^\//, "").split("/").filter(Boolean);
@@ -23,7 +25,7 @@ export default function FileExplorer({
     <>
       <div className="flex flex-col overflow-hidden flex-1">
         <div
-          className="flex items-center gap-0 px-3 py-2 flex-wrap"
+          className="flex items-center gap-0 pl-2 pt-2 pb-2 flex-wrap"
           style={{ borderBottom: "1px solid var(--color-ayu-border)" }}
         >
           <button
@@ -47,6 +49,12 @@ export default function FileExplorer({
               </button>
             </span>
           ))}
+          <button
+            className="ayu-btn ayu-btn-orange ml-auto"
+            onMouseDown={() => onCreateDirClick()}
+          >
+            + New Folder
+          </button>
         </div>
       </div>
 

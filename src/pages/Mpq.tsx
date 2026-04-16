@@ -1,15 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ViewEntry } from "../types/zod";
 import FileExplorer from "../components/mpq/FileExplorer";
 import useMpqManager from "../hooks/useMpqManager";
 import useDragDrop from "../hooks/useDragDrop";
 import { filterEntries, joinPath, trimPath } from "../helpers/mpqHelper";
+import InputModal from "../components/modals/InputModal";
 
 export default function Mpq() {
   const mpq = useMpqManager();
   useDragDrop(mpq);
+
+  const [modal, setModal] = useState<string | null>(null);
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
@@ -58,6 +61,21 @@ export default function Mpq() {
 
   return (
     <div>
+      {modal === "mkdir" && (
+        <InputModal
+          title="Create Directory"
+          label="Name"
+          hint="Will be created at the current archive path."
+          placeholder="e.g. Interface"
+          confirmLabel="Create"
+          onConfirm={(name) => {
+            mpq.createDir(name);
+            setModal(null);
+          }}
+          onClose={() => setModal(null)}
+        />
+      )}
+
       <div className="ayu-page-header">
         <h2 className="ayu-heading mr-auto">MPQ Editor</h2>
         <button onMouseDown={mpq.createMpq} className="ayu-btn ayu-btn-green">
@@ -102,6 +120,7 @@ export default function Mpq() {
         path={mpq.archivePath}
         onDirClick={(val: string) => navigate(val)}
         onCrumbClick={(val: number) => navigateTo(val)}
+        onCreateDirClick={() => setModal("mkdir")}
       />
     </div>
   );
