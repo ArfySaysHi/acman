@@ -127,14 +127,35 @@ export default function useMpqManager() {
     }
   };
 
-  const createDir = async (name: string) => {
+  const createDir = async (path: string) => {
     const id = activeMpqRef.current;
     if (!id) return console.error("No MPQ open");
 
-    const fullPath = joinPath(archivePath, name);
-    console.log(fullPath, id);
-    const res = await invoke("create_dir", { id: Number(id), path: fullPath });
-    console.log(res);
+    const fullPath = joinPath(archivePath, path);
+    const name = fullPath + "/.keep";
+
+    setFileCache((p) => ({
+      ...p,
+      [id]: [
+        ...(p[id] || []),
+        {
+          name,
+          size: 0,
+          compressed_size: 0,
+          flags: 0,
+          hashes: null,
+          table_indices: null,
+        },
+      ],
+    }));
+
+    invoke("create_dir", { id: Number(id), path: fullPath }).catch((err) => {
+      console.error("Failed to create directory:", err);
+      setFileCache((p) => ({
+        ...p,
+        [id]: p[id].filter((fileEntry) => fileEntry.name === fullPath),
+      }));
+    });
   };
 
   return {

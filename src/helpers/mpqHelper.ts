@@ -7,7 +7,7 @@ export function toPrefix(path: string): string {
 }
 
 export function joinPath(current: string, segment: string): string {
-  return current === "/" ? `/${segment}` : `${current}/${segment}`;
+  return current === "/" ? `${segment}` : `${current}/${segment}`;
 }
 
 export function windowsify(path: string): string {

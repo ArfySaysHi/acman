@@ -16,6 +16,10 @@ export default function Mpq() {
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
+    console.log(
+      "filtered",
+      mpq.fileCache[mpq.activeMpq]?.filter((fe) => fe.name.includes(".keep")),
+    );
     return filterEntries(mpq.fileCache[mpq.activeMpq] ?? [], mpq.archivePath);
   }, [mpq.activeMpq, mpq.archivePath, mpq.fileCache]);
 
