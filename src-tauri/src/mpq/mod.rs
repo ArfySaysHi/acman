@@ -1,5 +1,6 @@
 pub mod delete_file;
 pub mod delete_files;
+pub mod extract_file;
 pub mod open_mpq;
 pub mod rename_file;
 

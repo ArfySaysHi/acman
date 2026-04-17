@@ -28,4 +28,5 @@ futures-util = "0.3.32"
 regex = "1.12.3"
 tauri-plugin-dialog = "2"
 wow-mpq = "0.6.4"
+wow-cdbc = { version = "0.6", features = ["serde"] }
 

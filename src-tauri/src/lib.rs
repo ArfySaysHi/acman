@@ -73,7 +73,8 @@ pub fn run() {
             create_mpq,
             rename_file,
             delete_file,
-            delete_files
+            delete_files,
+            read_dbc
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

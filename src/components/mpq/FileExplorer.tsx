@@ -10,6 +10,7 @@ interface FileExplorerProps {
   onCreateDirClick: () => void;
   onRenameDirClick: () => void;
   onRowClick: (e: React.MouseEvent, fe: ViewEntry) => void;
+  onDoubleClick: (ve: ViewEntry) => void;
   loading: boolean;
 }
 
@@ -23,13 +24,14 @@ export default function FileExplorer({
   onCreateDirClick,
   onRenameDirClick,
   onRowClick,
+  onDoubleClick,
 }: FileExplorerProps) {
   const crumbs =
     path === "/" ? [] : path.replace(/^\//, "").split("/").filter(Boolean);
 
   return (
     <>
-      <div className="flex flex-col overflow-hidden flex-1">
+      <div className="flex flex-col overflow-hidden">
         <div
           className="flex items-center gap-0 pl-2 pt-2 pb-2 flex-wrap"
           style={{ borderBottom: "1px solid var(--color-ayu-border)" }}
@@ -123,6 +125,7 @@ export default function FileExplorer({
                     key={`file:${entry.name}`}
                     className={`cursor-pointer ${isSelected ? "selected" : ""}`}
                     onClick={(e) => onRowClick(e, entry)}
+                    onDoubleClick={() => onDoubleClick(entry)}
                   >
                     <td>
                       <span className="text-ayu-fg">{entry.name}</span>

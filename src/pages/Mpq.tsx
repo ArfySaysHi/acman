@@ -5,8 +5,14 @@ import { ViewEntry } from "../types/zod";
 import FileExplorer from "../components/mpq/FileExplorer";
 import useMpqManager from "../hooks/useMpqManager";
 import useDragDrop from "../hooks/useDragDrop";
-import { filterEntries, joinPath, trimPath } from "../helpers/mpqHelper";
+import {
+  filterEntries,
+  joinPath,
+  trimPath,
+  windowsify,
+} from "../helpers/mpqHelper";
 import InputModal from "../components/modals/InputModal";
+import DbcViewer from "../components/mpq/DbcViewer";
 
 export default function Mpq() {
   const mpq = useMpqManager();
@@ -14,6 +20,7 @@ export default function Mpq() {
 
   const [modal, setModal] = useState<string | null>(null);
   const [selected, setSelected] = useState<ViewEntry[]>([]);
+  const [openDbc, setOpenDbc] = useState<string | null>(null);
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
@@ -88,7 +95,7 @@ export default function Mpq() {
   }, [selected]);
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       {modal === "mkdir" && (
         <InputModal
           title="Create Directory"
@@ -120,55 +127,82 @@ export default function Mpq() {
         />
       )}
 
-      <div className="ayu-page-header">
-        <h2 className="ayu-heading mr-auto">MPQ Editor</h2>
-        <button onMouseDown={mpq.createMpq} className="ayu-btn ayu-btn-green">
-          + Create MPQ
-        </button>
-        <button onMouseDown={selectPath} className="ayu-btn ayu-btn-orange">
-          + Import MPQ
-        </button>
-      </div>
-
-      {mpqsOpen ? (
-        <div className="ayu-muted mb-1">
-          Left-click: Open | Right-click: Close
+      <div className="flex-shrink-0">
+        <div className="ayu-page-header">
+          <h2 className="ayu-heading mr-auto">MPQ Editor</h2>
+          <button onMouseDown={mpq.createMpq} className="ayu-btn ayu-btn-green">
+            + Create MPQ
+          </button>
+          <button onMouseDown={selectPath} className="ayu-btn ayu-btn-orange">
+            + Import MPQ
+          </button>
         </div>
-      ) : null}
 
-      <div
-        className="ayu-panel p-2 mb-4"
-        onContextMenu={(e) => e.preventDefault()}
-      >
         {mpqsOpen ? (
-          Object.keys(mpq.mpqs).map((k) => (
-            <button
-              key={k}
-              className={`ayu-btn ${mpq.activeMpq === k ? "ayu-btn-orange" : "ayu-btn-ghost"} mr-1`}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.button === 2 ? mpq.closeMpq(k) : mpq.setActiveMpq(k);
-              }}
-            >
-              {mpq.mpqs[k].name}
-            </button>
-          ))
-        ) : (
-          <div>Use the Create or Import MPQ option to see files.</div>
-        )}
+          <div className="ayu-muted mb-1">
+            Left-click: Open | Right-click: Close
+          </div>
+        ) : null}
+
+        <div
+          className="ayu-panel p-2 mb-3"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {mpqsOpen ? (
+            Object.keys(mpq.mpqs).map((k) => (
+              <button
+                key={k}
+                className={`ayu-btn ${mpq.activeMpq === k ? "ayu-btn-orange" : "ayu-btn-ghost"} mr-1`}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.button === 2 ? mpq.closeMpq(k) : mpq.setActiveMpq(k);
+                }}
+              >
+                {mpq.mpqs[k].name}
+              </button>
+            ))
+          ) : (
+            <div>Use the Create or Import MPQ option to see files.</div>
+          )}
+        </div>
       </div>
 
-      <FileExplorer
-        data={visibleEntries}
-        selected={selected}
-        loading={mpq.loading}
-        path={mpq.archivePath}
-        onDirClick={(val: string) => navigate(val)}
-        onCrumbClick={(val: number) => navigateTo(val)}
-        onCreateDirClick={() => setModal("mkdir")}
-        onRenameDirClick={() => setModal("rename")}
-        onRowClick={selectRow}
-      />
+      <div className="flex flex-col min-h-0 gap-3">
+        {openDbc && mpq.activeMpq && (
+          <div style={{ flex: "1 1 60%", minHeight: 0 }}>
+            <DbcViewer
+              mpqId={Number(mpq.activeMpq)}
+              path={openDbc}
+              onClose={() => setOpenDbc(null)}
+            />
+          </div>
+        )}
+
+        <div className="flex flex-col min-h-0">
+          <FileExplorer
+            data={visibleEntries}
+            selected={selected}
+            loading={mpq.loading}
+            path={mpq.archivePath}
+            onDirClick={(val: string) => navigate(val)}
+            onCrumbClick={(val: number) => navigateTo(val)}
+            onCreateDirClick={() => setModal("mkdir")}
+            onRenameDirClick={() => setModal("rename")}
+            onRowClick={selectRow}
+            onDoubleClick={(entry: ViewEntry) => {
+              if (
+                entry.kind === "file" &&
+                entry.name.toLowerCase().endsWith(".dbc")
+              ) {
+                const fullPath = windowsify(
+                  joinPath(mpq.archivePath, entry.name),
+                );
+                setOpenDbc(fullPath);
+              }
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

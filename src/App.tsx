@@ -36,19 +36,72 @@ function App() {
       <div className="flex h-screen overflow-hidden bg-ayu-bg text-ayu-fg">
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto p-5">
+          <div className="flex-1 overflow-hidden flex flex-col">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route
+                path="/"
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <Dashboard />
+                  </div>
+                }
+              />
               <Route
                 path="/worldserver"
-                element={<WorldServer worldserverSocket={worldserverSocket} />}
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <WorldServer worldserverSocket={worldserverSocket} />
+                  </div>
+                }
               />
-              <Route path="/database" element={<Database />} />
-              <Route path="/database/:tableName" element={<DatabaseTable />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/temppage" element={<CreateSpell />} />
-              <Route path="/quickmpq" element={<QuickMpq />} />
-              <Route path="/mpq" element={<Mpq />} />
+              <Route
+                path="/database"
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <Database />
+                  </div>
+                }
+              />
+              <Route
+                path="/database/:tableName"
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <DatabaseTable />
+                  </div>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <Settings />
+                  </div>
+                }
+              />
+              <Route
+                path="/temppage"
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <CreateSpell />
+                  </div>
+                }
+              />
+              <Route
+                path="/quickmpq"
+                element={
+                  <div className="overflow-auto h-full p-5">
+                    <QuickMpq />
+                  </div>
+                }
+              />
+              <Route
+                path="/mpq"
+                element={
+                  <div className="overflow-hidden flex flex-col h-full p-5">
+                    <Mpq />
+                  </div>
+                }
+              />
             </Routes>
           </div>
         </main>
