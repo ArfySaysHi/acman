@@ -78,11 +78,11 @@ export default function Mpq() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Delete" && selected[0]) mpq.deleteEntry(selected[0]);
+      if (e.key === "Delete") mpq.deleteEntries(selected);
     };
     document.addEventListener("keydown", handleKeyDown);
 
-    () => {
+    return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [selected]);

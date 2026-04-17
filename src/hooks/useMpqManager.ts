@@ -84,6 +84,7 @@ export default function useMpqManager() {
     setLoading(true);
     try {
       const res = await invoke("list_files", { id: Number(id) });
+      console.log("from backend:", res);
       setFileCache((prev) => ({ ...prev, [id]: res as FileEntry[] }));
     } finally {
       setLoading(false);
@@ -198,22 +199,57 @@ export default function useMpqManager() {
       });
   };
 
+  const normalize = (s: string) => s.replace(/\//g, "\\");
+
+  const resolveFilesToDelete = (
+    entry: ViewEntry,
+    cache: FileEntry[],
+  ): string[] => {
+    const filePath = normalize(windowsify(joinPath(archivePath, entry.name)));
+
+    if (entry.kind === "dir") {
+      const prefix = filePath.endsWith("\\") ? filePath : filePath + "\\";
+      return cache
+        .filter((fe) => normalize(fe.name).startsWith(prefix))
+        .map((fe) => fe.name);
+    } else {
+      const cached = cache.find((fe) => normalize(fe.name) === filePath);
+      return cached ? [cached.name] : [filePath];
+    }
+  };
+
   const deleteEntry = async (entry: ViewEntry) => {
+    await deleteEntries([entry]);
+  };
+
+  const deleteEntries = async (entries: ViewEntry[]) => {
     const id = activeMpqRef.current;
     if (!id) return console.error("No MPQ open");
 
-    const filePath = windowsify(joinPath(archivePath, entry.name));
+    const oldCache = fileCache[id] || [];
 
-    if (entry.kind === "dir") {
-      setFileCache((prev) => ({
-        ...prev,
-        [id]: (prev[id] || []).filter((fe) => !fe.name.startsWith(filePath)),
-      }));
-    } else {
-      setFileCache((prev) => ({
-        ...prev,
-        [id]: (prev[id] || []).filter((fe) => fe.name !== filePath),
-      }));
+    const allFilesToDelete = new Set<string>();
+    for (const entry of entries) {
+      for (const path of resolveFilesToDelete(entry, oldCache)) {
+        allFilesToDelete.add(path);
+      }
+    }
+
+    const normalizedToDelete = new Set([...allFilesToDelete].map(normalize));
+    const newCache = oldCache.filter(
+      (fe) => !normalizedToDelete.has(normalize(fe.name)),
+    );
+
+    setFileCache((prev) => ({ ...prev, [id]: newCache }));
+
+    try {
+      await invoke("delete_files", {
+        id: Number(id),
+        paths: [...allFilesToDelete],
+      });
+    } catch (err) {
+      console.error("Failed to delete entries, rolling back:", err);
+      setFileCache((prev) => ({ ...prev, [id]: oldCache }));
     }
   };
 
@@ -235,5 +271,6 @@ export default function useMpqManager() {
     createDir,
     renameEntry,
     deleteEntry,
+    deleteEntries,
   };
 }

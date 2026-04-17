@@ -71,7 +71,9 @@ pub fn run() {
             add_file,
             add_files,
             create_mpq,
-            rename_file
+            rename_file,
+            delete_file,
+            delete_files
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");
