@@ -13,6 +13,7 @@ export default function Mpq() {
   useDragDrop(mpq);
 
   const [modal, setModal] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ViewEntry[]>([]);
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
@@ -59,6 +60,22 @@ export default function Mpq() {
 
   const mpqsOpen = Object.keys(mpq.mpqs).length > 0;
 
+  const selectRow = (e: React.MouseEvent, viewEntry: ViewEntry) => {
+    const isPresent = selected.some((ve) => ve.name === viewEntry.name);
+
+    const filterVe = () =>
+      setSelected((prev) => prev.filter((ve) => ve.name !== viewEntry.name));
+    const addVe = () => setSelected((prev) => [...prev, viewEntry]);
+
+    if (e.ctrlKey) {
+      if (isPresent) return filterVe();
+      else return addVe();
+    }
+
+    if (isPresent && selected.length === 1) setSelected([]);
+    else setSelected([viewEntry]);
+  };
+
   return (
     <div>
       {modal === "mkdir" && (
@@ -70,6 +87,20 @@ export default function Mpq() {
           confirmLabel="Create"
           onConfirm={(name) => {
             mpq.createDir(name);
+            setModal(null);
+          }}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      {modal === "rename" && (
+        <InputModal
+          title="Rename Entry"
+          label="Name"
+          confirmLabel="Rename"
+          onConfirm={(name) => {
+            if (selected.length === 0) return;
+            mpq.renameEntry(selected[0], name);
             setModal(null);
           }}
           onClose={() => setModal(null)}
@@ -116,11 +147,14 @@ export default function Mpq() {
 
       <FileExplorer
         data={visibleEntries}
+        selected={selected}
         loading={mpq.loading}
         path={mpq.archivePath}
         onDirClick={(val: string) => navigate(val)}
         onCrumbClick={(val: number) => navigateTo(val)}
         onCreateDirClick={() => setModal("mkdir")}
+        onRenameDirClick={() => setModal("rename")}
+        onRowClick={selectRow}
       />
     </div>
   );

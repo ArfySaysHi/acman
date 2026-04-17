@@ -1,5 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { MpqMetadataMap, FileEntry, ZMpqMetadataMap } from "../types/zod";
+import {
+  MpqMetadataMap,
+  FileEntry,
+  ZMpqMetadataMap,
+  ViewEntry,
+} from "../types/zod";
 import { invoke } from "@tauri-apps/api/core";
 import {
   getNameFromPath,
@@ -160,6 +165,13 @@ export default function useMpqManager() {
     }));
   };
 
+  const renameEntry = async (file: ViewEntry, name: string) => {
+    const id = activeMpqRef.current;
+    if (!id) return console.error("No MPQ open");
+
+    console.log(file, name);
+  };
+
   return {
     mpqs,
     activeMpq,
@@ -176,5 +188,6 @@ export default function useMpqManager() {
     setArchivePath,
     createMpq,
     createDir,
+    renameEntry,
   };
 }

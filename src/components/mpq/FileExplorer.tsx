@@ -3,20 +3,26 @@ import { ViewEntry } from "../../types/zod";
 
 interface FileExplorerProps {
   data: ViewEntry[];
+  selected: ViewEntry[];
   path: string;
   onDirClick: (val: string) => void;
   onCrumbClick: (val: number) => void;
   onCreateDirClick: () => void;
+  onRenameDirClick: () => void;
+  onRowClick: (e: React.MouseEvent, fe: ViewEntry) => void;
   loading: boolean;
 }
 
 export default function FileExplorer({
   data,
+  selected,
   loading,
   path,
   onDirClick,
   onCrumbClick,
   onCreateDirClick,
+  onRenameDirClick,
+  onRowClick,
 }: FileExplorerProps) {
   const crumbs =
     path === "/" ? [] : path.replace(/^\//, "").split("/").filter(Boolean);
@@ -55,6 +61,12 @@ export default function FileExplorer({
           >
             + New Folder
           </button>
+          <button
+            className="ayu-btn ayu-btn-orange ml-3"
+            onMouseDown={() => onRenameDirClick()}
+          >
+            Rename Entry
+          </button>
         </div>
       </div>
 
@@ -79,14 +91,23 @@ export default function FileExplorer({
               </tr>
             </thead>
             <tbody>
-              {data.map((entry) =>
-                entry.kind === "dir" ? (
+              {data.map((entry) => {
+                const isSelected = selected.some(
+                  (ve) => ve.name === entry.name,
+                );
+
+                return entry.kind === "dir" ? (
                   <tr
                     key={`dir:${entry.name}`}
-                    className="cursor-pointer"
-                    onMouseDown={() => onDirClick(entry.name)}
+                    className={`cursor-pointer ${isSelected ? "selected" : ""}`}
+                    onClick={(e) => onRowClick(e, entry)}
                   >
-                    <td>
+                    <td
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        onDirClick(entry.name);
+                      }}
+                    >
                       <span className="flex items-center gap-2">
                         <span className="text-ayu-yellow text-[11px]">▶</span>
                         <span className="text-ayu-fg">{entry.name}</span>
@@ -98,7 +119,11 @@ export default function FileExplorer({
                     <td className="text-ayu-muted">—</td>
                   </tr>
                 ) : (
-                  <tr key={`file:${entry.name}`}>
+                  <tr
+                    key={`file:${entry.name}`}
+                    className={`cursor-pointer ${isSelected ? "selected" : ""}`}
+                    onClick={(e) => onRowClick(e, entry)}
+                  >
                     <td>
                       <span className="text-ayu-fg">{entry.name}</span>
                     </td>
@@ -121,8 +146,8 @@ export default function FileExplorer({
                         .toUpperCase()}
                     </td>
                   </tr>
-                ),
-              )}
+                );
+              })}
             </tbody>
           </table>
         )}
