@@ -169,7 +169,52 @@ export default function useMpqManager() {
     const id = activeMpqRef.current;
     if (!id) return console.error("No MPQ open");
 
-    console.log(file, name);
+    const oldName = joinPath(archivePath, file.name);
+    const newName = joinPath(archivePath, name);
+    const oldPrefix = windowsify(oldName);
+    const newPrefix = windowsify(newName);
+
+    if (fileCache[id].some((f) => f.name === newName)) {
+      return console.error("File already named present:", newName);
+    }
+
+    const oldCache = [...fileCache[id]];
+    const newCache = (fileCache[id] || []).map((entry) => {
+      if (entry.name.startsWith(oldPrefix))
+        return { ...entry, name: entry.name.replace(oldPrefix, newPrefix) };
+      else return entry;
+    });
+
+    setFileCache((prev) => ({ ...prev, [id]: newCache }));
+
+    if (file.kind === "file")
+      invoke("rename_file", {
+        id: Number(id),
+        oldName,
+        newName,
+      }).catch((err) => {
+        console.log("Failed to rename file", err);
+        setFileCache((prev) => ({ ...prev, [id]: [...oldCache] }));
+      });
+  };
+
+  const deleteEntry = async (entry: ViewEntry) => {
+    const id = activeMpqRef.current;
+    if (!id) return console.error("No MPQ open");
+
+    const filePath = windowsify(joinPath(archivePath, entry.name));
+
+    if (entry.kind === "dir") {
+      setFileCache((prev) => ({
+        ...prev,
+        [id]: (prev[id] || []).filter((fe) => !fe.name.startsWith(filePath)),
+      }));
+    } else {
+      setFileCache((prev) => ({
+        ...prev,
+        [id]: (prev[id] || []).filter((fe) => fe.name !== filePath),
+      }));
+    }
   };
 
   return {
@@ -189,5 +234,6 @@ export default function useMpqManager() {
     createMpq,
     createDir,
     renameEntry,
+    deleteEntry,
   };
 }

@@ -76,6 +76,17 @@ export default function Mpq() {
     else setSelected([viewEntry]);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Delete" && selected[0]) mpq.deleteEntry(selected[0]);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selected]);
+
   return (
     <div>
       {modal === "mkdir" && (
@@ -99,7 +110,9 @@ export default function Mpq() {
           label="Name"
           confirmLabel="Rename"
           onConfirm={(name) => {
-            if (selected.length === 0) return;
+            if (selected.length === 0)
+              return console.error("Must select a file or directory.");
+
             mpq.renameEntry(selected[0], name);
             setModal(null);
           }}
