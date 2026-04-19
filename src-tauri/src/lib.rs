@@ -6,6 +6,8 @@ use tauri::Manager;
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
+mod dbc;
+
 mod types;
 use types::structs::*;
 
