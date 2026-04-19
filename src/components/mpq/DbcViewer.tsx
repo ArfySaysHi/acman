@@ -194,12 +194,10 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
 
           <div
             ref={(el) => {
-              (
-                containerRef as React.MutableRefObject<HTMLDivElement | null>
-              ).current = el;
-              (
-                scrollRef as React.MutableRefObject<HTMLDivElement | null>
-              ).current = el;
+              (containerRef as React.RefObject<HTMLDivElement | null>).current =
+                el;
+              (scrollRef as React.RefObject<HTMLDivElement | null>).current =
+                el;
             }}
             style={{ flex: 1, overflowY: "auto", overflowX: "auto" }}
             onScroll={(e) => {

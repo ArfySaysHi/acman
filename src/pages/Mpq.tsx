@@ -140,7 +140,8 @@ export default function Mpq() {
 
         {mpqsOpen ? (
           <div className="ayu-muted mb-1">
-            Left-click: Open | Right-click: Close
+            Left-click: Open | Right-click: Close | Double-click a .DBC file to
+            view
           </div>
         ) : null}
 
