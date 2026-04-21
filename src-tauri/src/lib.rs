@@ -38,6 +38,8 @@ pub fn run() {
     let settings = Mutex::new(Settings {
         client_path: None,
         output_path: None,
+        noggit_projects_path: None,
+        server_data_path: None,
     });
 
     let state = Arc::new(AppState {

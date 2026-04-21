@@ -5,6 +5,8 @@ import { invoke } from "@tauri-apps/api/core";
 interface Settings {
   client_path?: string;
   output_path?: string;
+  noggit_projects_path?: string;
+  server_data_path?: string;
 }
 
 function PathField({
@@ -20,13 +22,18 @@ function PathField({
 }) {
   return (
     <div className="ayu-panel p-4">
-      <div className="text-ayu-orange text-[11px] font-semibold mb-0.5">{label}</div>
+      <div className="text-ayu-orange text-[11px] font-semibold mb-0.5">
+        {label}
+      </div>
       <div className="text-ayu-dim text-[11px] mb-3">{description}</div>
       <div className="flex items-center gap-2">
         <div className={`ayu-path flex-1 ${value ? "" : "empty"}`}>
           {value ?? "No path selected…"}
         </div>
-        <button onMouseDown={onPick} className="ayu-btn ayu-btn-ghost ayu-btn-md shrink-0">
+        <button
+          onMouseDown={onPick}
+          className="ayu-btn ayu-btn-ghost ayu-btn-md shrink-0"
+        >
           Browse
         </button>
       </div>
@@ -46,13 +53,35 @@ export default function Settings(): JSX.Element {
   }, []);
 
   const pickClientPath = async () => {
-    const path = await open({ directory: true, title: "Select WoW Client Folder" });
+    const path = await open({
+      directory: true,
+      title: "Select WoW Client Folder",
+    });
     if (path) setSettings((prev) => ({ ...prev, client_path: path }));
   };
 
   const pickOutputPath = async () => {
-    const path = await open({ directory: true, title: "Pick a folder to dump patch files" });
+    const path = await open({
+      directory: true,
+      title: "Pick a folder to dump patch files",
+    });
     if (path) setSettings((prev) => ({ ...prev, output_path: path }));
+  };
+
+  const pickNoggitPath = async () => {
+    const path = await open({
+      directory: true,
+      title: "Pick the folder that contains Noggit project folders",
+    });
+    if (path) setSettings((prev) => ({ ...prev, noggit_projects_path: path }));
+  };
+
+  const pickServerPath = async () => {
+    const path = await open({
+      directory: true,
+      title: "Pick the folder that contains server data",
+    });
+    if (path) setSettings((prev) => ({ ...prev, server_data_path: path }));
   };
 
   const handleSave = async () => {
@@ -91,6 +120,18 @@ export default function Settings(): JSX.Element {
           description="Where .MPQ files will be written."
           value={settings.output_path}
           onPick={pickOutputPath}
+        />
+        <PathField
+          label="Noggit Red Projects Path"
+          description="Where noggit-red project folders are stored."
+          value={settings.noggit_projects_path}
+          onPick={pickNoggitPath}
+        />
+        <PathField
+          label="Server Data Path"
+          description="Where the ./ac-server/data folder is stored."
+          value={settings.server_data_path}
+          onPick={pickServerPath}
         />
 
         <div className="mt-2">
