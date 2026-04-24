@@ -1,27 +1,28 @@
 import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ProjectDropdown from "../components/dropdowns/ProjectDropdown";
 
 export default function QuickMpq() {
-  const [path, setPath] = useState<string | null>(null);
   const [converting, setConverting] = useState(false);
   const [done, setDone] = useState(false);
+  const [projects, setProjects] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
 
-  const selectPath = async () => {
-    const p = await open({
-      directory: true,
-      title: "Select folder to convert to MPQ",
-    });
-    setPath(p);
-    setDone(false);
-  };
+  useEffect(() => {
+    invoke<string[]>("get_noggit_projects")
+      .then((projects) => {
+        setProjects(projects);
+        if (projects.length > 0) setSelected(projects[0]);
+      })
+      .catch(console.error);
+  }, []);
 
   const deployToClient = async () => {
-    if (converting || !path) return;
+    if (converting || !selected) return;
     setConverting(true);
     try {
       await invoke("deploy_to_client", {
-        inputDir: path,
+        inputDir: selected,
         patchName: "patch-9.mpq",
       });
       setDone(true);
@@ -38,28 +39,23 @@ export default function QuickMpq() {
         <h2 className="ayu-heading">Quick MPQ</h2>
       </div>
 
-      <div className="ayu-panel p-5 max-w-sm flex flex-col gap-4">
+      <div className="ayu-panel-alt p-5 max-w-sm flex flex-col gap-4">
         <div>
           <div className="text-ayu-dim text-[10px] uppercase tracking-wider mb-1.5">
             Source folder
           </div>
-          <div
-            className={`ayu-path font-mono break-all ${path ? "" : "empty"}`}
-          >
-            {path ?? "No folder selected"}
-          </div>
+          <ProjectDropdown
+            projects={projects}
+            selected={selected}
+            onSelect={setSelected}
+            disabled={converting}
+          />
         </div>
 
         <div className="flex gap-2">
           <button
-            onMouseDown={selectPath}
-            className="ayu-btn ayu-btn-ghost ayu-btn-md flex-1"
-          >
-            Browse
-          </button>
-          <button
             onMouseDown={deployToClient}
-            disabled={!path || converting}
+            disabled={!selected || converting}
             className={`ayu-btn ayu-btn-md flex-1 ${
               done ? "ayu-btn-green" : "ayu-btn-orange"
             }`}

@@ -10,6 +10,7 @@ mod commands;
 use commands::deploy;
 use commands::docker::*;
 use commands::mpq::*;
+use commands::noggit::*;
 use commands::patch::*;
 use commands::settings::*;
 use commands::spells::*;
@@ -79,7 +80,8 @@ pub fn run() {
             delete_file,
             delete_files,
             read_dbc,
-            deploy::mpq::deploy_to_client
+            deploy::mpq::deploy_to_client,
+            get_noggit_projects
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");
