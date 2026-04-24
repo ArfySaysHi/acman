@@ -21,8 +21,8 @@ export default function QuickMpq() {
     if (converting || !selected) return;
     setConverting(true);
     try {
-      await invoke("deploy_to_client", {
-        inputDir: selected,
+      await invoke("deploy_noggit_project", {
+        projectName: selected,
         patchName: "patch-9.mpq",
       });
       setDone(true);

@@ -7,11 +7,10 @@ use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
 mod commands;
-use commands::deploy;
+use commands::deploy::*;
 use commands::docker::*;
 use commands::mpq::*;
 use commands::noggit::*;
-use commands::patch::*;
 use commands::settings::*;
 use commands::spells::*;
 use commands::worldserver::*;
@@ -24,8 +23,11 @@ use types::structs::*;
 
 mod dbc;
 mod mpq;
+mod pipeline;
 
 pub fn run() {
+    tracing_subscriber::fmt().init();
+
     let docker = Arc::new(
         Docker::connect_with_local_defaults()
             .expect("Failed to connect to Docker - is it running?"),
@@ -67,7 +69,6 @@ pub fn run() {
             send_ws_command,
             load_settings,
             save_settings,
-            path_to_mpq,
             generate_spell_sql,
             open_mpq,
             close_mpq,
@@ -80,8 +81,8 @@ pub fn run() {
             delete_file,
             delete_files,
             read_dbc,
-            deploy::mpq::deploy_to_client,
-            get_noggit_projects
+            get_noggit_projects,
+            deploy_noggit_project
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

@@ -20,7 +20,7 @@ pub async fn get_noggit_projects(
         .map(|entry| {
             entry
                 .map_err(|e| format!("Failed to read directory entry: {e}"))
-                .map(|e| path.join(e.file_name()).to_string_lossy().to_string())
+                .map(|e| e.file_name().to_string_lossy().to_string())
         })
         .collect()
 }
