@@ -6,12 +6,8 @@ use tauri::Manager;
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-mod dbc;
-
-mod types;
-use types::structs::*;
-
 mod commands;
+use commands::deploy;
 use commands::docker::*;
 use commands::mpq::*;
 use commands::patch::*;
@@ -19,9 +15,13 @@ use commands::settings::*;
 use commands::spells::*;
 use commands::worldserver::*;
 
+mod helpers;
 use crate::helpers::config_helper;
 
-mod helpers;
+mod types;
+use types::structs::*;
+
+mod dbc;
 mod mpq;
 
 pub fn run() {
@@ -78,7 +78,8 @@ pub fn run() {
             rename_file,
             delete_file,
             delete_files,
-            read_dbc
+            read_dbc,
+            deploy::mpq::deploy_to_client
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

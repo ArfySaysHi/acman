@@ -16,14 +16,17 @@ export default function QuickMpq() {
     setDone(false);
   };
 
-  const convertToMpq = async () => {
+  const deployToClient = async () => {
     if (converting || !path) return;
     setConverting(true);
     try {
-      await invoke("path_to_mpq", { path });
+      await invoke("deploy_to_client", {
+        inputDir: path,
+        patchName: "patch-9.mpq",
+      });
       setDone(true);
     } catch (err) {
-      console.error("Failed to create mpq:", err);
+      console.error("Failed to deploy mpq:", err);
     } finally {
       setConverting(false);
     }
@@ -55,7 +58,7 @@ export default function QuickMpq() {
             Browse
           </button>
           <button
-            onMouseDown={convertToMpq}
+            onMouseDown={deployToClient}
             disabled={!path || converting}
             className={`ayu-btn ayu-btn-md flex-1 ${
               done ? "ayu-btn-green" : "ayu-btn-orange"
