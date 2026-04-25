@@ -6,7 +6,7 @@ interface Settings {
   client_path?: string;
   output_path?: string;
   noggit_projects_path?: string;
-  server_data_path?: string;
+  server_path?: string;
 }
 
 function PathField({
@@ -81,7 +81,7 @@ export default function Settings(): JSX.Element {
       directory: true,
       title: "Pick the folder that contains server data",
     });
-    if (path) setSettings((prev) => ({ ...prev, server_data_path: path }));
+    if (path) setSettings((prev) => ({ ...prev, server_path: path }));
   };
 
   const handleSave = async () => {
@@ -129,8 +129,8 @@ export default function Settings(): JSX.Element {
         />
         <PathField
           label="Server Data Path"
-          description="Where the ./ac-server/data folder is stored."
-          value={settings.server_data_path}
+          description="Where the ./azerothcore-wotlk folder or equivalent is stored."
+          value={settings.server_path}
           onPick={pickServerPath}
         />
 

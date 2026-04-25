@@ -42,7 +42,7 @@ pub fn run() {
         client_path: None,
         output_path: None,
         noggit_projects_path: None,
-        server_data_path: None,
+        server_path: None,
     });
 
     let state = Arc::new(AppState {
@@ -58,6 +58,7 @@ pub fn run() {
         .manage(state)
         .setup(|app| {
             let state = app.state::<SharedAppState>();
+            // TODO: Rewrite this into a helper function to update local settings state or just delete backend settings entirely
             let res = config_helper::load_settings(app.app_handle())?;
             tauri::async_runtime::block_on(async { *state.settings.lock().await = res });
 

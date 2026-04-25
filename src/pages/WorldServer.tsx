@@ -6,7 +6,9 @@ interface WorldServerProps {
   worldserverSocket: ServerStream;
 }
 
-export default function WorldServer({ worldserverSocket }: WorldServerProps): JSX.Element {
+export default function WorldServer({
+  worldserverSocket,
+}: WorldServerProps): JSX.Element {
   const { stream, connected } = worldserverSocket;
   const [cmd, setCmd] = useState("");
   const consoleRef = useRef<HTMLTextAreaElement | null>(null);
@@ -17,7 +19,10 @@ export default function WorldServer({ worldserverSocket }: WorldServerProps): JS
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter") { sendCommand(cmd); setCmd(""); }
+    if (e.key === "Enter") {
+      sendCommand(cmd);
+      setCmd("");
+    }
   };
 
   useEffect(() => {
@@ -26,21 +31,21 @@ export default function WorldServer({ worldserverSocket }: WorldServerProps): JS
 
   return (
     <div className="h-full w-full flex flex-col gap-3">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="ayu-page-header mb-0">
           <h2 className="ayu-heading">World Server</h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className={connected ? "ayu-dot-connected" : "ayu-dot-disconnected"} />
+          <span
+            className={connected ? "ayu-dot-connected" : "ayu-dot-disconnected"}
+          />
           <span className="text-ayu-dim text-[11px]">
             {connected ? "connected" : "disconnected"}
           </span>
         </div>
       </div>
 
-      {/* Console */}
-      <div className="flex-1 ayu-panel overflow-hidden">
+      <div className="flex-1 ayu-panel-alt overflow-hidden">
         <textarea
           value={stream}
           ref={consoleRef}
@@ -51,8 +56,7 @@ export default function WorldServer({ worldserverSocket }: WorldServerProps): JS
         />
       </div>
 
-      {/* Command input */}
-      <div className="ayu-panel flex items-center gap-2 px-3 py-2">
+      <div className="ayu-panel-alt flex items-center gap-2 px-3 py-2">
         <span className="text-ayu-orange text-[11px] select-none">$</span>
         <input
           value={cmd}

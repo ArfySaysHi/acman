@@ -4,7 +4,7 @@ use std::path::PathBuf;
 #[allow(dead_code)]
 pub struct DeployContext {
     pub client_path: PathBuf,
-    pub server_data_path: PathBuf,
+    pub server_path: PathBuf,
     pub noggit_projects_path: PathBuf,
     pub project_name: String,
     pub patch_name: String,
@@ -22,8 +22,8 @@ impl DeployContext {
                 .client_path
                 .clone()
                 .ok_or("No client path configured")?,
-            server_data_path: guard
-                .server_data_path
+            server_path: guard
+                .server_path
                 .clone()
                 .ok_or("No server data path configured")?,
             noggit_projects_path: guard

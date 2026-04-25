@@ -45,7 +45,7 @@ pub struct Settings {
     pub client_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
     pub noggit_projects_path: Option<PathBuf>,
-    pub server_data_path: Option<PathBuf>,
+    pub server_path: Option<PathBuf>,
 }
 
 pub type SharedAppState = Arc<AppState>;
