@@ -9,34 +9,34 @@ export interface PipelineStep {
   status: StepStatus;
 }
 
-const STEPS = [
-  "Pack MPQ",
-  "Deploy Noggit Project To Client",
-  "Deploy Map Dbc To Server",
-  "Restart Worldserver",
-];
-
 export default function useDeployPipeline() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [steps, setSteps] = useState<PipelineStep[]>(
-    STEPS.map((name) => ({ name, status: "pending" })),
-  );
+  const [steps, setSteps] = useState<PipelineStep[]>([]);
 
   const unlistenRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    reset();
     return () => unlistenRef.current?.();
   }, []);
 
-  const reset = () => {
-    setSteps(STEPS.map((name) => ({ name, status: "pending" })));
+  const getSteps = async () => {
+    const steps = await invoke("get_pipeline_steps");
+    if (Array.isArray(steps)) {
+      return steps.map((step: string): PipelineStep => ({ name: step, status: "pending" }));
+    }
+    return [];
+  };
+
+  const reset = async () => {
+    setSteps(await getSteps());
     setError(null);
   };
 
   const run = async (projectName: string, patchName: string) => {
     if (running) return;
-    reset();
+    await reset();
     setRunning(true);
 
     unlistenRef.current = await listen<string>("deploy_progress", (event) => {
