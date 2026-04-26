@@ -2,10 +2,10 @@ use crate::pipeline::{context::DeployContext, step::DeployStep};
 use async_trait::async_trait;
 use tracing::info;
 
-pub struct DeployMapDbcToServer;
+pub struct DeployMapDbcToServerStep;
 
 #[async_trait]
-impl DeployStep for DeployMapDbcToServer {
+impl DeployStep for DeployMapDbcToServerStep {
     fn name(&self) -> &str {
         "Deploy Map Dbc To Server"
     }

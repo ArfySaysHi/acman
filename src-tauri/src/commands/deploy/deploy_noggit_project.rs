@@ -3,9 +3,9 @@ use crate::{
         context::DeployContext,
         step::DeployStep,
         steps::{
-            deploy_map_dbc_to_server::DeployMapDbcToServer,
+            deploy_map_dbc_to_server::DeployMapDbcToServerStep,
             deploy_noggit_project_to_client::DeployNoggitProjectToClientStep,
-            pack_mpq::PackMpqStep, restart_world_server::RestartWorldserver,
+            pack_mpq::PackMpqStep, restart_world_server::RestartWorldserverStep,
         },
     },
     types::structs::SharedAppState,
@@ -23,8 +23,8 @@ pub async fn deploy_noggit_project(
     let steps: Vec<Box<dyn DeployStep>> = vec![
         Box::new(PackMpqStep),
         Box::new(DeployNoggitProjectToClientStep),
-        Box::new(DeployMapDbcToServer),
-        Box::new(RestartWorldserver),
+        Box::new(DeployMapDbcToServerStep),
+        Box::new(RestartWorldserverStep),
     ];
 
     for step in steps {

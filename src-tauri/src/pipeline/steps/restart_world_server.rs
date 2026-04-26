@@ -3,10 +3,10 @@ use async_trait::async_trait;
 use std::process::Command;
 use tracing::info;
 
-pub struct RestartWorldserver;
+pub struct RestartWorldserverStep;
 
 #[async_trait]
-impl DeployStep for RestartWorldserver {
+impl DeployStep for RestartWorldserverStep {
     fn name(&self) -> &str {
         "Restart Worldserver"
     }
