@@ -1,37 +1,37 @@
-import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import ProjectDropdown from "../components/dropdowns/ProjectDropdown";
+import useDeployPipeline from "../hooks/useDeployPipeline";
+
+const STATUS_ICON: Record<string, string> = {
+  pending: "○",
+  active: "◉",
+  done: "✓",
+  error: "✕",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  pending: "text-ayu-dim",
+  active: "text-ayu-orange",
+  done: "text-ayu-green",
+  error: "text-red-400",
+};
 
 export default function QuickMpq() {
-  const [converting, setConverting] = useState(false);
-  const [done, setDone] = useState(false);
   const [projects, setProjects] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const { steps, running, error, run } = useDeployPipeline();
 
   useEffect(() => {
     invoke<string[]>("get_noggit_projects")
-      .then((projects) => {
-        setProjects(projects);
-        if (projects.length > 0) setSelected(projects[0]);
+      .then((p) => {
+        setProjects(p);
+        if (p.length > 0) setSelected(p[0]);
       })
       .catch(console.error);
   }, []);
 
-  const deployToClient = async () => {
-    if (converting || !selected) return;
-    setConverting(true);
-    try {
-      await invoke("deploy_noggit_project", {
-        projectName: selected,
-        patchName: "patch-9.mpq",
-      });
-      setDone(true);
-    } catch (err) {
-      console.error("Failed to deploy mpq:", err);
-    } finally {
-      setConverting(false);
-    }
-  };
+  const allDone = steps.every((s) => s.status === "done");
 
   return (
     <div>
@@ -48,21 +48,31 @@ export default function QuickMpq() {
             projects={projects}
             selected={selected}
             onSelect={setSelected}
-            disabled={converting}
+            disabled={running}
           />
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onMouseDown={deployToClient}
-            disabled={!selected || converting}
-            className={`ayu-btn ayu-btn-md flex-1 ${
-              done ? "ayu-btn-green" : "ayu-btn-orange"
-            }`}
-          >
-            {converting ? "Converting…" : done ? "✓ Done" : "Convert"}
-          </button>
+        <div className="flex flex-col gap-1.5">
+          {steps.map((step) => (
+            <div
+              key={step.name}
+              className={`flex items-center gap-2 text-[11px] ${STATUS_COLOR[step.status]}`}
+            >
+              <span>{STATUS_ICON[step.status]}</span>
+              <span>{step.name}</span>
+            </div>
+          ))}
         </div>
+
+        {error && <div className="text-red-400 text-[11px] wrap-break-words">{error}</div>}
+
+        <button
+          onMouseDown={() => selected && run(selected, "patch-9.mpq")}
+          disabled={!selected || running}
+          className={`ayu-btn ayu-btn-md ${allDone ? "ayu-btn-green" : "ayu-btn-orange"}`}
+        >
+          {running ? "Deploying…" : allDone ? "✓ Done" : "Deploy"}
+        </button>
       </div>
     </div>
   );
