@@ -15,7 +15,7 @@ impl DeployStep for DeployNoggitProjectToClientStep {
         info!(project = %ctx.client_path.display(), "Deploying to client");
         let patch_path = std::env::temp_dir().join(&ctx.patch_name);
         let output_path = &ctx.client_path.join(format!("Data/{}", &ctx.patch_name));
-        std::fs::copy(&patch_path, &output_path).map_err(|e| {
+        std::fs::copy(&patch_path, output_path).map_err(|e| {
             format!("Failed to copy the patch from the temporary directory to the client: {e}")
         })?;
         std::fs::remove_file(&patch_path)

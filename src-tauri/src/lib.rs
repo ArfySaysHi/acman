@@ -46,9 +46,9 @@ pub fn run() {
     });
 
     let state = Arc::new(AppState {
-        docker: docker,
-        worldserver: worldserver,
-        settings: settings,
+        docker,
+        worldserver,
+        settings,
         mpqs: RwLock::new(HashMap::new()),
         next_mpq_id: AtomicU32::new(1),
     });

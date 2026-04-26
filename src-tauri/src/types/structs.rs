@@ -33,9 +33,11 @@ pub struct MpqMetadata {
     pub dirty: bool,
 }
 
+pub type ArcMutexPinBoxFuture = Arc<Mutex<Pin<Box<dyn AsyncWrite + Send>>>>;
+
 #[allow(dead_code)]
 pub struct WorldServerState {
-    pub input: Option<Arc<Mutex<Pin<Box<dyn AsyncWrite + Send>>>>>,
+    pub input: Option<ArcMutexPinBoxFuture>,
     pub attached: bool,
 }
 

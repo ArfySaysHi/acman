@@ -20,7 +20,7 @@ impl DeployStep for DeployMapDbcToServer {
         info!(input_path=%map_dbc.display(), "Map dbc path");
         let output_path = &ctx.server_path.join("env/dist/data/dbc/Map.dbc");
         info!(output_path = %output_path.display(), "Output path generated");
-        std::fs::copy(&map_dbc, &output_path)
+        std::fs::copy(map_dbc, output_path)
             .map_err(|e| format!("Failed to copy dbc to the server folder: {e}"))?;
         info!("Deployed map dbc successfully");
 

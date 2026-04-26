@@ -46,11 +46,7 @@ fn spawn_worldserver_output_thread(
             while let Some(pos) = buffer.find('\n') {
                 let raw_line: String = buffer.drain(..=pos).collect();
                 let cleaned = strip_ansi(&raw_line);
-                let normalized = cleaned
-                    .trim()
-                    .split_whitespace()
-                    .collect::<Vec<_>>()
-                    .join(" ");
+                let normalized = cleaned.split_whitespace().collect::<Vec<_>>().join(" ");
 
                 if !normalized.is_empty() && normalized != last_line {
                     let _ = app_clone.emit("worldserver-output", normalized.clone());

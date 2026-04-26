@@ -19,7 +19,7 @@ pub enum DbcValue {
 
 fn extract_dbc_name(path: &str) -> &str {
     path.split(['/', '\\'])
-        .last()
+        .next_back()
         .unwrap_or("unknown.dbc")
         .trim_end_matches(".dbc")
 }
