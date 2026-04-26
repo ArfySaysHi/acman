@@ -1,7 +1,6 @@
 use crate::types::structs::SharedAppState;
 use std::path::PathBuf;
 
-#[allow(dead_code)]
 pub struct DeployContext {
     pub client_path: PathBuf,
     pub server_path: PathBuf,

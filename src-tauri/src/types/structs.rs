@@ -9,7 +9,6 @@ use tokio::io::AsyncWrite;
 use tokio::sync::{Mutex, RwLock};
 use wow_mpq::MutableArchive;
 
-#[allow(dead_code)]
 pub struct AppState {
     pub docker: Arc<Docker>,
     pub worldserver: Mutex<WorldServerState>,
@@ -18,7 +17,6 @@ pub struct AppState {
     pub next_mpq_id: AtomicU32,
 }
 
-#[allow(dead_code)]
 pub struct MpqInstance {
     pub archive: MutableArchive,
     pub path: PathBuf,
@@ -35,13 +33,11 @@ pub struct MpqMetadata {
 
 pub type ArcMutexPinBoxFuture = Arc<Mutex<Pin<Box<dyn AsyncWrite + Send>>>>;
 
-#[allow(dead_code)]
 pub struct WorldServerState {
     pub input: Option<ArcMutexPinBoxFuture>,
     pub attached: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Settings {
     pub client_path: Option<PathBuf>,
@@ -52,7 +48,6 @@ pub struct Settings {
 
 pub type SharedAppState = Arc<AppState>;
 
-#[allow(dead_code)]
 #[derive(Clone, Debug, Serialize)]
 pub struct DockerEvent {
     pub name: Option<String>,
