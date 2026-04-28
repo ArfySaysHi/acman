@@ -5,12 +5,7 @@ import { ViewEntry } from "../types/zod";
 import FileExplorer from "../components/mpq/FileExplorer";
 import useMpqManager from "../hooks/useMpqManager";
 import useDragDrop from "../hooks/useDragDrop";
-import {
-  filterEntries,
-  joinPath,
-  trimPath,
-  windowsify,
-} from "../helpers/mpqHelper";
+import { filterEntries, joinPath, trimPath, windowsify } from "../helpers/mpqHelper";
 import InputModal from "../components/modals/InputModal";
 import DbcViewer from "../components/mpq/DbcViewer";
 
@@ -19,8 +14,8 @@ export default function Mpq() {
   useDragDrop(mpq);
 
   const [modal, setModal] = useState<string | null>(null);
-  const [selected, setSelected] = useState<ViewEntry[]>([]);
   const [openDbc, setOpenDbc] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ViewEntry[]>([]);
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
@@ -33,6 +28,10 @@ export default function Mpq() {
       mpq.fetchFiles(mpq.activeMpq);
     }
   }, [mpq.activeMpq]);
+
+  useEffect(() => {
+    if (selected.length > 0) setSelected([]);
+  }, [mpq.archivePath]);
 
   const selectPath = async () => {
     try {
@@ -47,8 +46,7 @@ export default function Mpq() {
         paths.map(async (path) => {
           const id = await invoke("open_mpq", { path });
 
-          if (typeof id !== "number")
-            return console.error("Non-number value returned");
+          if (typeof id !== "number") return console.error("Non-number value returned");
 
           return id;
         }),
@@ -60,18 +58,15 @@ export default function Mpq() {
     }
   };
 
-  const navigate = (segment: string) =>
-    mpq.setArchivePath((p) => joinPath(p, segment));
-  const navigateTo = (idx: number) =>
-    mpq.setArchivePath((p) => trimPath(p, idx));
+  const navigate = (segment: string) => mpq.setArchivePath((p) => joinPath(p, segment));
+  const navigateTo = (idx: number) => mpq.setArchivePath((p) => trimPath(p, idx));
 
   const mpqsOpen = Object.keys(mpq.mpqs).length > 0;
 
   const selectRow = (e: React.MouseEvent, viewEntry: ViewEntry) => {
     const isPresent = selected.some((ve) => ve.name === viewEntry.name);
 
-    const filterVe = () =>
-      setSelected((prev) => prev.filter((ve) => ve.name !== viewEntry.name));
+    const filterVe = () => setSelected((prev) => prev.filter((ve) => ve.name !== viewEntry.name));
     const addVe = () => setSelected((prev) => [...prev, viewEntry]);
 
     if (e.ctrlKey) {
@@ -93,6 +88,13 @@ export default function Mpq() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [selected]);
+
+  const handleExtract = async () => {
+    const path = await open({ title: "Select a directory to extract to", directory: true });
+    if (!path) return;
+
+    mpq.extractFiles(selected, path);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -117,8 +119,7 @@ export default function Mpq() {
           label="Name"
           confirmLabel="Rename"
           onConfirm={(name) => {
-            if (selected.length === 0)
-              return console.error("Must select a file or directory.");
+            if (selected.length === 0) return console.error("Must select a file or directory.");
 
             mpq.renameEntry(selected[0], name);
             setModal(null);
@@ -127,7 +128,7 @@ export default function Mpq() {
         />
       )}
 
-      <div className="flex-shrink-0">
+      <div className="shrink-0">
         <div className="ayu-page-header">
           <h2 className="ayu-heading mr-auto">MPQ Editor</h2>
           <button onMouseDown={mpq.createMpq} className="ayu-btn ayu-btn-green">
@@ -140,15 +141,11 @@ export default function Mpq() {
 
         {mpqsOpen ? (
           <div className="ayu-muted mb-1">
-            Left-click: Open | Right-click: Close | Double-click a .DBC file to
-            view
+            Left-click: Open | Right-click: Close | Double-click a .DBC file to view
           </div>
         ) : null}
 
-        <div
-          className="ayu-panel p-2 mb-3"
-          onContextMenu={(e) => e.preventDefault()}
-        >
+        <div className="ayu-panel p-2 mb-3" onContextMenu={(e) => e.preventDefault()}>
           {mpqsOpen ? (
             Object.keys(mpq.mpqs).map((k) => (
               <button
@@ -189,15 +186,11 @@ export default function Mpq() {
             onCrumbClick={(val: number) => navigateTo(val)}
             onCreateDirClick={() => setModal("mkdir")}
             onRenameDirClick={() => setModal("rename")}
+            onExtractClick={handleExtract}
             onRowClick={selectRow}
             onDoubleClick={(entry: ViewEntry) => {
-              if (
-                entry.kind === "file" &&
-                entry.name.toLowerCase().endsWith(".dbc")
-              ) {
-                const fullPath = windowsify(
-                  joinPath(mpq.archivePath, entry.name),
-                );
+              if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
+                const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
                 setOpenDbc(fullPath);
               }
             }}

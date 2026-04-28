@@ -1,10 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import {
-  MpqMetadataMap,
-  FileEntry,
-  ZMpqMetadataMap,
-  ViewEntry,
-} from "../types/zod";
+import { MpqMetadataMap, FileEntry, ZMpqMetadataMap, ViewEntry } from "../types/zod";
 import { invoke } from "@tauri-apps/api/core";
 import {
   getNameFromPath,
@@ -41,8 +36,7 @@ export default function useMpqManager() {
     const data = ZMpqMetadataMap.parse(res);
     setMpqs(data);
 
-    if (!activeMpq && Object.keys(data).length > 0)
-      setActiveMpq(Object.keys(data)[0]);
+    if (!activeMpq && Object.keys(data).length > 0) setActiveMpq(Object.keys(data)[0]);
 
     return data;
   };
@@ -84,7 +78,6 @@ export default function useMpqManager() {
     setLoading(true);
     try {
       const res = await invoke("list_files", { id: Number(id) });
-      console.log("from backend:", res);
       setFileCache((prev) => ({ ...prev, [id]: res as FileEntry[] }));
     } finally {
       setLoading(false);
@@ -152,6 +145,34 @@ export default function useMpqManager() {
     }
   };
 
+  const extractFiles = async (selected: ViewEntry[], path: string) => {
+    const id = activeMpqRef.current;
+    if (!id) return;
+
+    let filePaths: string[] = [];
+    selected.forEach((entry) => {
+      if (entry.kind === "file") filePaths.push(windowsify(joinPath(archivePath, entry.name)));
+      else {
+        filePaths = [
+          ...filePaths,
+          ...fileCache[id]
+            .filter((fe) => {
+              const name = fe.name.toLowerCase();
+              const dir = windowsify(joinPath(archivePath, entry.name)).toLowerCase();
+              const prefix = dir.endsWith("\\") ? dir : dir + "\\";
+
+              return name.startsWith(prefix);
+            })
+            .map((fe) => fe.name),
+        ];
+      }
+    });
+
+    invoke("extract_files", { id: Number(id), path, filePaths }).catch((err) =>
+      console.error("Failed to extract files from MPQ", err),
+    );
+  };
+
   const createDir = async (path: string) => {
     const id = activeMpqRef.current;
     if (!id) return console.error("No MPQ open");
@@ -201,17 +222,12 @@ export default function useMpqManager() {
 
   const normalize = (s: string) => s.replace(/\//g, "\\");
 
-  const resolveFilesToDelete = (
-    entry: ViewEntry,
-    cache: FileEntry[],
-  ): string[] => {
+  const resolveFilesToDelete = (entry: ViewEntry, cache: FileEntry[]): string[] => {
     const filePath = normalize(windowsify(joinPath(archivePath, entry.name)));
 
     if (entry.kind === "dir") {
       const prefix = filePath.endsWith("\\") ? filePath : filePath + "\\";
-      return cache
-        .filter((fe) => normalize(fe.name).startsWith(prefix))
-        .map((fe) => fe.name);
+      return cache.filter((fe) => normalize(fe.name).startsWith(prefix)).map((fe) => fe.name);
     } else {
       const cached = cache.find((fe) => normalize(fe.name) === filePath);
       return cached ? [cached.name] : [filePath];
@@ -236,9 +252,7 @@ export default function useMpqManager() {
     }
 
     const normalizedToDelete = new Set([...allFilesToDelete].map(normalize));
-    const newCache = oldCache.filter(
-      (fe) => !normalizedToDelete.has(normalize(fe.name)),
-    );
+    const newCache = oldCache.filter((fe) => !normalizedToDelete.has(normalize(fe.name)));
 
     setFileCache((prev) => ({ ...prev, [id]: newCache }));
 
@@ -272,5 +286,6 @@ export default function useMpqManager() {
     renameEntry,
     deleteEntry,
     deleteEntries,
+    extractFiles,
   };
 }

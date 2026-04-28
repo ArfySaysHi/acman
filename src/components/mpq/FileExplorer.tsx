@@ -9,6 +9,7 @@ interface FileExplorerProps {
   onCrumbClick: (val: number) => void;
   onCreateDirClick: () => void;
   onRenameDirClick: () => void;
+  onExtractClick: () => void;
   onRowClick: (e: React.MouseEvent, fe: ViewEntry) => void;
   onDoubleClick: (ve: ViewEntry) => void;
   loading: boolean;
@@ -23,11 +24,11 @@ export default function FileExplorer({
   onCrumbClick,
   onCreateDirClick,
   onRenameDirClick,
+  onExtractClick,
   onRowClick,
   onDoubleClick,
 }: FileExplorerProps) {
-  const crumbs =
-    path === "/" ? [] : path.replace(/^\//, "").split("/").filter(Boolean);
+  const crumbs = path === "/" ? [] : path.replace(/^\//, "").split("/").filter(Boolean);
 
   return (
     <>
@@ -57,17 +58,18 @@ export default function FileExplorer({
               </button>
             </span>
           ))}
-          <button
-            className="ayu-btn ayu-btn-orange ml-auto"
-            onMouseDown={() => onCreateDirClick()}
-          >
+          <button className="ayu-btn ayu-btn-orange ml-auto" onMouseDown={() => onCreateDirClick()}>
             + New Folder
+          </button>
+          <button className="ayu-btn ayu-btn-orange ml-3" onMouseDown={() => onRenameDirClick()}>
+            Rename Entry
           </button>
           <button
             className="ayu-btn ayu-btn-orange ml-3"
-            onMouseDown={() => onRenameDirClick()}
+            onMouseDown={onExtractClick}
+            disabled={selected.length === 0}
           >
-            Rename Entry
+            Extract {selected.length} {selected.length === 1 ? "File" : "Files"}
           </button>
         </div>
       </div>
@@ -94,9 +96,7 @@ export default function FileExplorer({
             </thead>
             <tbody>
               {data.map((entry) => {
-                const isSelected = selected.some(
-                  (ve) => ve.name === entry.name,
-                );
+                const isSelected = selected.some((ve) => ve.name === entry.name);
 
                 return entry.kind === "dir" ? (
                   <tr
@@ -130,23 +130,16 @@ export default function FileExplorer({
                     <td>
                       <span className="text-ayu-fg">{entry.name}</span>
                     </td>
-                    <td className="text-ayu-dim tabular-nums">
-                      {formatBytes(entry.entry.size)}
-                    </td>
+                    <td className="text-ayu-dim tabular-nums">{formatBytes(entry.entry.size)}</td>
                     <td className="text-ayu-dim tabular-nums">
                       {formatBytes(entry.entry.compressed_size)}
                     </td>
                     <td className="text-ayu-dim tabular-nums">
-                      {formatBytes(
-                        entry.entry.size - entry.entry.compressed_size,
-                      )}
+                      {formatBytes(entry.entry.size - entry.entry.compressed_size)}
                     </td>
                     <td className="text-ayu-dim font-mono text-[10px]">
                       0x
-                      {entry.entry.flags
-                        .toString(16)
-                        .padStart(8, "0")
-                        .toUpperCase()}
+                      {entry.entry.flags.toString(16).padStart(8, "0").toUpperCase()}
                     </td>
                   </tr>
                 );
