@@ -93,7 +93,9 @@ export default function Mpq() {
     const path = await open({ title: "Select a directory to extract to", directory: true });
     if (!path) return;
 
-    mpq.extractFiles(selected, path);
+    mpq.extractFiles(selected, path).then(() => {
+      setSelected([]);
+    });
   };
 
   return (
