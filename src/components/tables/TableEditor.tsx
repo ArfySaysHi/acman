@@ -7,14 +7,16 @@ interface TableEditorProps {
   data?: TableRowType[];
 }
 
-export default function TableEditor({ tableName, data = [] }: TableEditorProps): JSX.Element {
+export default function TableEditor({ data = [] }: TableEditorProps): JSX.Element {
   const [rows, setRows] = useState<TableRowType[]>(data);
   const [editingId, setEditingId] = useState<string | number | null>(null);
   const [editValues, setEditValues] = useState<Partial<TableRowType>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setRows(data); }, [data]);
+  useEffect(() => {
+    setRows(data);
+  }, [data]);
 
   const columns = data.length > 0 ? Object.keys(data[0]).filter((k) => k !== "id") : [];
 
@@ -32,7 +34,7 @@ export default function TableEditor({ tableName, data = [] }: TableEditorProps):
     setError(null);
     try {
       setRows((prev) =>
-        prev.map((row) => (row.id === rowId ? { ...row, ...editValues } : row) as TableRowType)
+        prev.map((row) => (row.id === rowId ? { ...row, ...editValues } : row) as TableRowType),
       );
       setEditingId(null);
     } catch (err) {
@@ -42,7 +44,10 @@ export default function TableEditor({ tableName, data = [] }: TableEditorProps):
     }
   };
 
-  const handleCancel = () => { setEditingId(null); setEditValues({}); };
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditValues({});
+  };
 
   const handleDelete = async (rowId: string | number) => {
     if (!window.confirm("Delete this row?")) return;
@@ -59,7 +64,9 @@ export default function TableEditor({ tableName, data = [] }: TableEditorProps):
 
   const handleAddRow = () => {
     const newRow: TableRowType = { id: Date.now() };
-    columns.forEach((col) => { newRow[col] = ""; });
+    columns.forEach((col) => {
+      newRow[col] = "";
+    });
     setRows((prev) => [...prev, newRow]);
     handleEdit(newRow.id, newRow);
   };
@@ -82,7 +89,9 @@ export default function TableEditor({ tableName, data = [] }: TableEditorProps):
         <table className="ayu-table">
           <thead>
             <tr>
-              {columns.map((col) => <th key={col}>{col}</th>)}
+              {columns.map((col) => (
+                <th key={col}>{col}</th>
+              ))}
               <th className="actions">Actions</th>
             </tr>
           </thead>
