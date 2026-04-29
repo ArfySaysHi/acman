@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import ProjectDropdown from "../components/dropdowns/ProjectDropdown";
 import useDeployPipeline from "../hooks/useDeployPipeline";
+import { useToast } from "../context/ToastContext";
 
 const STATUS_ICON: Record<string, string> = {
   pending: "○",
@@ -21,6 +22,7 @@ export default function QuickMpq() {
   const [projects, setProjects] = useState<string[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const { steps, running, error, run } = useDeployPipeline();
+  const { push } = useToast();
 
   useEffect(() => {
     invoke<string[]>("get_noggit_projects")
@@ -28,7 +30,7 @@ export default function QuickMpq() {
         setProjects(p);
         if (p.length > 0) setSelected(p[0]);
       })
-      .catch(console.error);
+      .catch((err) => push(`Failed to get list of Noggit projects: ${err}`));
   }, []);
 
   const allDone = steps.every((s) => s.status === "done");

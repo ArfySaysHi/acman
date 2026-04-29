@@ -10,7 +10,14 @@ use crate::{
     },
     types::structs::SharedAppState,
 };
+use serde::Serialize;
 use tauri::{AppHandle, Emitter};
+
+#[derive(Serialize, Clone)]
+struct StepProgress {
+    name: String,
+    status: String,
+}
 
 #[tauri::command]
 pub async fn deploy_noggit_project(
@@ -28,8 +35,38 @@ pub async fn deploy_noggit_project(
     ];
 
     for step in steps {
-        app.emit("deploy_progress", step.name()).ok();
-        step.execute(&ctx).await?;
+        app.emit(
+            "deploy_progress",
+            StepProgress {
+                name: step.name().to_string(),
+                status: "active".to_string(),
+            },
+        )
+        .ok();
+
+        match step.execute(&ctx).await {
+            Ok(()) => {
+                app.emit(
+                    "deploy_progress",
+                    StepProgress {
+                        name: step.name().to_string(),
+                        status: "done".to_string(),
+                    },
+                )
+                .ok();
+            }
+            Err(err) => {
+                app.emit(
+                    "deploy_progress",
+                    StepProgress {
+                        name: step.name().to_string(),
+                        status: "error".to_string(),
+                    },
+                )
+                .ok();
+                return Err(err.to_string());
+            }
+        }
     }
 
     Ok(())

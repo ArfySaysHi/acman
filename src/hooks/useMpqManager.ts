@@ -191,6 +191,8 @@ export default function useMpqManager() {
   };
 
   const renameEntry = async (file: ViewEntry, name: string) => {
+    if (file.kind === "dir") return push("Directory renaming not yet implemented", "error");
+
     const id = activeMpqRef.current;
     if (!id) return push("No MPQ open", "error");
 
@@ -200,7 +202,7 @@ export default function useMpqManager() {
     const newPrefix = windowsify(newName);
 
     if (fileCache[id].some((f) => f.name === newName))
-      push(`File already exists: ${newName}`, "error");
+      return push(`File already exists: ${newName}`, "error");
 
     const oldCache = [...fileCache[id]];
     const newCache = (fileCache[id] || []).map((entry) => {
@@ -211,15 +213,14 @@ export default function useMpqManager() {
 
     setFileCache((prev) => ({ ...prev, [id]: newCache }));
 
-    if (file.kind === "file")
-      invoke("rename_file", {
-        id: Number(id),
-        oldName,
-        newName,
-      }).catch((err) => {
-        push(`Failed to rename file: ${err}`, "error");
-        setFileCache((prev) => ({ ...prev, [id]: [...oldCache] }));
-      });
+    invoke("rename_file", {
+      id: Number(id),
+      oldName,
+      newName,
+    }).catch((err) => {
+      push(`Failed to rename file: ${err}`, "error");
+      setFileCache((prev) => ({ ...prev, [id]: [...oldCache] }));
+    });
   };
 
   const resolveFilesToDelete = (entry: ViewEntry, cache: FileEntry[]): string[] => {
@@ -239,6 +240,8 @@ export default function useMpqManager() {
   };
 
   const deleteEntries = async (entries: ViewEntry[]) => {
+    if (entries.length === 0) return push("Please select entries before deleting", "info");
+
     const id = activeMpqRef.current;
     if (!id) return push("No MPQ open", "error");
 
