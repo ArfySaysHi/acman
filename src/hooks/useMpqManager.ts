@@ -49,7 +49,6 @@ export default function useMpqManager() {
       await refresh();
       setActiveMpq(`${id}`);
     } catch (err) {
-      console.error("Failed to create MPQ:", err);
       push(`Failed to create MPQ: ${err}`, "error");
     }
   };
@@ -104,7 +103,6 @@ export default function useMpqManager() {
       path,
       archivePath: formatted,
     }).catch((err) => {
-      console.error("Failed to add file:", err);
       push(`Failed to add file: ${err}`, "error");
       setFileCache((prev) => ({
         ...prev,
@@ -133,7 +131,6 @@ export default function useMpqManager() {
         paths,
         archivePaths: filePaths,
       }).catch((err) => {
-        console.error("Failed to add files, reverting optimistic update", err);
         push(`Failed to add files, reverting optimistic update: ${err}`, "error");
         setFileCache((prev) => {
           const existing = prev[id] || [];
@@ -146,7 +143,6 @@ export default function useMpqManager() {
         });
       });
     } catch (err) {
-      console.error("Failed to add files:", err);
       push(`Failed to add files: ${err}`, "error");
     }
   };
@@ -175,8 +171,8 @@ export default function useMpqManager() {
     });
 
     await invoke("extract_files", { id: Number(id), path, filePaths }).catch((err) => {
-      console.error("Failed to extract files from MPQ", err);
       push(`Failed to extract files: ${err}`, "error");
+      throw err;
     });
   };
 
@@ -203,10 +199,8 @@ export default function useMpqManager() {
     const oldPrefix = windowsify(oldName);
     const newPrefix = windowsify(newName);
 
-    if (fileCache[id].some((f) => f.name === newName)) {
-      push(`File already named present: ${newName}`, "error");
-      return console.error("File already named present:", newName);
-    }
+    if (fileCache[id].some((f) => f.name === newName))
+      push(`File already exists: ${newName}`, "error");
 
     const oldCache = [...fileCache[id]];
     const newCache = (fileCache[id] || []).map((entry) => {
@@ -223,7 +217,7 @@ export default function useMpqManager() {
         oldName,
         newName,
       }).catch((err) => {
-        console.error("Failed to rename file", err);
+        push(`Failed to rename file: ${err}`, "error");
         setFileCache((prev) => ({ ...prev, [id]: [...oldCache] }));
       });
   };
@@ -268,7 +262,6 @@ export default function useMpqManager() {
         paths: [...allFilesToDelete],
       });
     } catch (err) {
-      console.error("Failed to delete entries, rolling back:", err);
       push(`Failed to delete entries, rolling back: ${err}`, "error");
       setFileCache((prev) => ({ ...prev, [id]: oldCache }));
     }

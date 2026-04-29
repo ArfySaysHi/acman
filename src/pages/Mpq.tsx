@@ -8,6 +8,7 @@ import useDragDrop from "../hooks/useDragDrop";
 import { filterEntries, joinPath, trimPath, windowsify } from "../helpers/mpqHelper";
 import InputModal from "../components/modals/InputModal";
 import DbcViewer from "../components/mpq/DbcViewer";
+import { useToast } from "../context/ToastContext";
 
 export default function Mpq() {
   const mpq = useMpqManager();
@@ -16,6 +17,8 @@ export default function Mpq() {
   const [modal, setModal] = useState<string | null>(null);
   const [openDbc, setOpenDbc] = useState<string | null>(null);
   const [selected, setSelected] = useState<ViewEntry[]>([]);
+
+  const { push } = useToast();
 
   const visibleEntries = useMemo<ViewEntry[]>(() => {
     if (!mpq.activeMpq) return [];
@@ -46,7 +49,8 @@ export default function Mpq() {
         paths.map(async (path) => {
           const id = await invoke("open_mpq", { path });
 
-          if (typeof id !== "number") return console.error("Non-number value returned");
+          if (typeof id !== "number")
+            return push("Failed to open MPQ, unexpected response", "error");
 
           return id;
         }),
@@ -54,7 +58,7 @@ export default function Mpq() {
 
       await mpq.refresh();
     } catch (err) {
-      console.error("Failed to open MPQ archive:", err);
+      push(`Failed to open MPQ archive: ${err}`, "error");
     }
   };
 
@@ -93,9 +97,10 @@ export default function Mpq() {
     const path = await open({ title: "Select a directory to extract to", directory: true });
     if (!path) return;
 
-    mpq.extractFiles(selected, path).then(() => {
-      setSelected([]);
-    });
+    mpq
+      .extractFiles(selected, path)
+      .then(() => setSelected([]))
+      .catch(() => {});
   };
 
   return (
