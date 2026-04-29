@@ -9,6 +9,7 @@ import {
   pathToMpqFile,
   windowsify,
 } from "../helpers/mpqHelper";
+import { useToast } from "../context/ToastContext";
 
 export default function useMpqManager() {
   const [mpqs, setMpqs] = useState<MpqMetadataMap>({});
@@ -19,6 +20,7 @@ export default function useMpqManager() {
 
   const activeMpqRef = useRef<string | null>(null);
   const mounted = useRef<boolean>(false);
+  const { push } = useToast();
 
   useEffect(() => {
     if (mounted.current) return;
@@ -48,6 +50,7 @@ export default function useMpqManager() {
       setActiveMpq(`${id}`);
     } catch (err) {
       console.error("Failed to create MPQ:", err);
+      push(`Failed to create MPQ: ${err}`, "error");
     }
   };
 
@@ -102,6 +105,7 @@ export default function useMpqManager() {
       archivePath: formatted,
     }).catch((err) => {
       console.error("Failed to add file:", err);
+      push(`Failed to add file: ${err}`, "error");
       setFileCache((prev) => ({
         ...prev,
         [id]: (prev[id] || []).filter((fe) => fe.name !== formatted),
@@ -129,7 +133,8 @@ export default function useMpqManager() {
         paths,
         archivePaths: filePaths,
       }).catch((err) => {
-        console.error("Failed to add_files, reverting optimistic update", err);
+        console.error("Failed to add files, reverting optimistic update", err);
+        push(`Failed to add files, reverting optimistic update: ${err}`, "error");
         setFileCache((prev) => {
           const existing = prev[id] || [];
 
@@ -142,6 +147,7 @@ export default function useMpqManager() {
       });
     } catch (err) {
       console.error("Failed to add files:", err);
+      push(`Failed to add files: ${err}`, "error");
     }
   };
 
@@ -168,14 +174,15 @@ export default function useMpqManager() {
       }
     });
 
-    await invoke("extract_files", { id: Number(id), path, filePaths }).catch((err) =>
-      console.error("Failed to extract files from MPQ", err),
-    );
+    await invoke("extract_files", { id: Number(id), path, filePaths }).catch((err) => {
+      console.error("Failed to extract files from MPQ", err);
+      push(`Failed to extract files: ${err}`, "error");
+    });
   };
 
   const createDir = async (path: string) => {
     const id = activeMpqRef.current;
-    if (!id) return console.error("No MPQ open");
+    if (!id) return push("No MPQ open", "error");
 
     const fullPath = joinPath(archivePath, path);
     const name = fullPath + "\\";
@@ -189,7 +196,7 @@ export default function useMpqManager() {
 
   const renameEntry = async (file: ViewEntry, name: string) => {
     const id = activeMpqRef.current;
-    if (!id) return console.error("No MPQ open");
+    if (!id) return push("No MPQ open", "error");
 
     const oldName = joinPath(archivePath, file.name);
     const newName = joinPath(archivePath, name);
@@ -197,6 +204,7 @@ export default function useMpqManager() {
     const newPrefix = windowsify(newName);
 
     if (fileCache[id].some((f) => f.name === newName)) {
+      push(`File already named present: ${newName}`, "error");
       return console.error("File already named present:", newName);
     }
 
@@ -215,7 +223,7 @@ export default function useMpqManager() {
         oldName,
         newName,
       }).catch((err) => {
-        console.log("Failed to rename file", err);
+        console.error("Failed to rename file", err);
         setFileCache((prev) => ({ ...prev, [id]: [...oldCache] }));
       });
   };
@@ -238,7 +246,7 @@ export default function useMpqManager() {
 
   const deleteEntries = async (entries: ViewEntry[]) => {
     const id = activeMpqRef.current;
-    if (!id) return console.error("No MPQ open");
+    if (!id) return push("No MPQ open", "error");
 
     const oldCache = fileCache[id] || [];
 
@@ -261,6 +269,7 @@ export default function useMpqManager() {
       });
     } catch (err) {
       console.error("Failed to delete entries, rolling back:", err);
+      push(`Failed to delete entries, rolling back: ${err}`, "error");
       setFileCache((prev) => ({ ...prev, [id]: oldCache }));
     }
   };
