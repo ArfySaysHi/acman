@@ -30,7 +30,7 @@ export default function Mpq() {
   }, [mpq.activeMpq]);
 
   useEffect(() => {
-    if (selected.length > 0) setSelected([]);
+    setSelected([]);
   }, [mpq.archivePath]);
 
   const selectPath = async () => {

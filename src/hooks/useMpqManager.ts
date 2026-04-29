@@ -168,7 +168,7 @@ export default function useMpqManager() {
       }
     });
 
-    invoke("extract_files", { id: Number(id), path, filePaths }).catch((err) =>
+    await invoke("extract_files", { id: Number(id), path, filePaths }).catch((err) =>
       console.error("Failed to extract files from MPQ", err),
     );
   };
@@ -220,16 +220,14 @@ export default function useMpqManager() {
       });
   };
 
-  const normalize = (s: string) => s.replace(/\//g, "\\");
-
   const resolveFilesToDelete = (entry: ViewEntry, cache: FileEntry[]): string[] => {
-    const filePath = normalize(windowsify(joinPath(archivePath, entry.name)));
+    const filePath = windowsify(joinPath(archivePath, entry.name));
 
     if (entry.kind === "dir") {
       const prefix = filePath.endsWith("\\") ? filePath : filePath + "\\";
-      return cache.filter((fe) => normalize(fe.name).startsWith(prefix)).map((fe) => fe.name);
+      return cache.filter((fe) => windowsify(fe.name).startsWith(prefix)).map((fe) => fe.name);
     } else {
-      const cached = cache.find((fe) => normalize(fe.name) === filePath);
+      const cached = cache.find((fe) => windowsify(fe.name) === filePath);
       return cached ? [cached.name] : [filePath];
     }
   };
@@ -251,8 +249,8 @@ export default function useMpqManager() {
       }
     }
 
-    const normalizedToDelete = new Set([...allFilesToDelete].map(normalize));
-    const newCache = oldCache.filter((fe) => !normalizedToDelete.has(normalize(fe.name)));
+    const normalizedToDelete = new Set([...allFilesToDelete].map(windowsify));
+    const newCache = oldCache.filter((fe) => !normalizedToDelete.has(windowsify(fe.name)));
 
     setFileCache((prev) => ({ ...prev, [id]: newCache }));
 

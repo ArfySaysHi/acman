@@ -69,7 +69,7 @@ export default function FileExplorer({
             onMouseDown={onExtractClick}
             disabled={selected.length === 0}
           >
-            Extract {selected.length} {selected.length === 1 ? "File" : "Files"}
+            Extract Selected
           </button>
         </div>
       </div>
