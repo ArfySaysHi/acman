@@ -22,7 +22,6 @@ pub async fn list_mpqs(
             MpqMetadata {
                 path: mpq.path.clone(),
                 name: mpq.name.clone(),
-                dirty: mpq.dirty,
             },
         );
     }

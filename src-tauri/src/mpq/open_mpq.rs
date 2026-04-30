@@ -37,7 +37,6 @@ pub async fn open_mpq(state: SharedAppState, path: String) -> Result<u32, String
             Arc::new(Mutex::new(MpqInstance {
                 archive,
                 path,
-                dirty: false,
                 name,
             })),
         );

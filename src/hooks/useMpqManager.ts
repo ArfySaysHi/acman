@@ -21,6 +21,7 @@ export default function useMpqManager() {
   const activeMpqRef = useRef<string | null>(null);
   const mounted = useRef<boolean>(false);
   const { push } = useToast();
+  console.log(fileCache);
 
   useEffect(() => {
     if (mounted.current) return;
@@ -191,15 +192,16 @@ export default function useMpqManager() {
   };
 
   const renameEntry = async (file: ViewEntry, name: string) => {
-    if (file.kind === "dir") return push("Directory renaming not yet implemented", "error");
-
     const id = activeMpqRef.current;
     if (!id) return push("No MPQ open", "error");
 
-    const oldName = joinPath(archivePath, file.name);
-    const newName = joinPath(archivePath, name);
-    const oldPrefix = windowsify(oldName);
-    const newPrefix = windowsify(newName);
+    const oldName = windowsify(joinPath(archivePath, file.name));
+    const newName = windowsify(joinPath(archivePath, name));
+
+    const oldPrefix =
+      file.kind === "dir" ? (oldName.endsWith("\\") ? oldName : oldName + "\\") : oldName;
+    const newPrefix =
+      file.kind === "dir" ? (newName.endsWith("\\") ? newName : newName + "\\") : newName;
 
     if (fileCache[id].some((f) => f.name === newName))
       return push(`File already exists: ${newName}`, "error");
@@ -213,12 +215,12 @@ export default function useMpqManager() {
 
     setFileCache((prev) => ({ ...prev, [id]: newCache }));
 
-    invoke("rename_file", {
+    invoke("rename_dir", {
       id: Number(id),
-      oldName,
-      newName,
+      oldPrefix,
+      newPrefix,
     }).catch((err) => {
-      push(`Failed to rename file: ${err}`, "error");
+      push(`Failed to rename entry: ${err}`, "error");
       setFileCache((prev) => ({ ...prev, [id]: [...oldCache] }));
     });
   };

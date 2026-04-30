@@ -21,14 +21,12 @@ pub struct MpqInstance {
     pub archive: MutableArchive,
     pub path: PathBuf,
     pub name: String,
-    pub dirty: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MpqMetadata {
     pub path: PathBuf,
     pub name: String,
-    pub dirty: bool,
 }
 
 pub type ArcMutexPinBoxFuture = Arc<Mutex<Pin<Box<dyn AsyncWrite + Send>>>>;

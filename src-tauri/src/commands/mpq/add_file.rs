@@ -29,7 +29,5 @@ pub async fn add_file(
     instance.archive = MutableArchive::open(&archive_path_buf)
         .map_err(|e| format!("Failed to reopen archive after write: {e}"))?;
 
-    instance.dirty = true;
-
     Ok(())
 }
