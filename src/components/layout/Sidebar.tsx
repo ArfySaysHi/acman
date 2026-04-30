@@ -3,11 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 const menuItems = [
   { label: "Dashboard", path: "/" },
   { label: "World Server", path: "/worldserver" },
-  { label: "Database", path: "/database" },
-  { label: "Quick MPQ", path: "/quickmpq" },
   { label: "MPQ Editing", path: "/mpq" },
   { label: "Settings", path: "/settings" },
-  { label: "Temp", path: "/temppage" },
 ];
 
 export default function Sidebar() {
@@ -15,14 +12,11 @@ export default function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <aside className="flex flex-col h-screen w-[200px] shrink-0 bg-ayu-alt border-r border-ayu-border select-none">
-      {/* Logo */}
+    <aside className="flex flex-col h-screen w-50 shrink-0 bg-ayu-alt border-r border-ayu-border select-none">
       <div className="px-4 py-4 flex items-center gap-2 border-b border-ayu-border">
         <span className="text-ayu-orange text-lg leading-none">◈</span>
         <span className="ayu-heading">Server Mgr</span>
       </div>
-
-      {/* Nav */}
       <nav className="flex-1 px-2 py-3 flex flex-col gap-0.5 overflow-y-auto">
         {menuItems.map((item) => (
           <Link

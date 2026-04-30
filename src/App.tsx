@@ -5,12 +5,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import WorldServer from "./pages/WorldServer";
-import Database from "./pages/Database";
-import DatabaseTable from "./pages/DatabaseTable";
 import Settings from "./pages/Settings";
 import useStream from "./hooks/useStream";
-import CreateSpell from "./pages/create/CreateSpell";
-import QuickMpq from "./pages/QuickMpq";
 import Mpq from "./pages/Mpq";
 
 function App() {
@@ -42,7 +38,7 @@ function App() {
                 path="/"
                 element={
                   <div className="overflow-auto h-full p-5">
-                    <Dashboard />
+                    <Dashboard worldserverSocket={worldserverSocket} />
                   </div>
                 }
               />
@@ -55,42 +51,10 @@ function App() {
                 }
               />
               <Route
-                path="/database"
-                element={
-                  <div className="overflow-auto h-full p-5">
-                    <Database />
-                  </div>
-                }
-              />
-              <Route
-                path="/database/:tableName"
-                element={
-                  <div className="overflow-auto h-full p-5">
-                    <DatabaseTable />
-                  </div>
-                }
-              />
-              <Route
                 path="/settings"
                 element={
                   <div className="overflow-auto h-full p-5">
                     <Settings />
-                  </div>
-                }
-              />
-              <Route
-                path="/temppage"
-                element={
-                  <div className="overflow-auto h-full p-5">
-                    <CreateSpell />
-                  </div>
-                }
-              />
-              <Route
-                path="/quickmpq"
-                element={
-                  <div className="overflow-auto h-full p-5">
-                    <QuickMpq />
                   </div>
                 }
               />
