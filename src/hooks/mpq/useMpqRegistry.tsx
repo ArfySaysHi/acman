@@ -55,6 +55,20 @@ export default function useMpqRegistry({ setArchivePath, setFileCache }: UseMpqR
     }
   };
 
+  const openBulkMpqs = async (paths: string[]) => {
+    await Promise.allSettled(
+      paths.map(async (path) => {
+        const id = await invoke("open_mpq", { path });
+
+        if (typeof id !== "number") return push("Failed to open MPQ, unexpected response", "error");
+
+        return id;
+      }),
+    );
+
+    await refresh();
+  };
+
   const closeMpq = async (id: string) => {
     const numericId = Number(id);
     if (Number.isNaN(numericId)) return push(`Invalid MPQ id: ${id}`, "error");
@@ -86,6 +100,7 @@ export default function useMpqRegistry({ setArchivePath, setFileCache }: UseMpqR
     refresh,
     createMpq,
     openMpq,
+    openBulkMpqs,
     closeMpq,
   };
 }

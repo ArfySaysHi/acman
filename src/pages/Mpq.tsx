@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { ViewEntry } from "../types/types";
@@ -43,20 +42,9 @@ export default function Mpq() {
         multiple: true,
       });
 
-      if (!paths || paths.length === 0) return;
+      if (!paths || paths.length === 0) return push("You must select at least one file", "info");
 
-      await Promise.allSettled(
-        paths.map(async (path) => {
-          const id = await invoke("open_mpq", { path });
-
-          if (typeof id !== "number")
-            return push("Failed to open MPQ, unexpected response", "error");
-
-          return id;
-        }),
-      );
-
-      await mpq.refresh();
+      await mpq.openBulkMpqs(paths);
     } catch (err) {
       push(`Failed to open MPQ archive: ${err}`, "error");
     }
@@ -126,8 +114,6 @@ export default function Mpq() {
           label="Name"
           confirmLabel="Rename"
           onConfirm={(name) => {
-            if (selected.length === 0) return console.error("Must select a file or directory.");
-
             mpq.renameEntry(selected[0], name);
             setModal(null);
           }}

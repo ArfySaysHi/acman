@@ -4,7 +4,6 @@ import useMpqFileCache from "./mpq/useMpqFileCache";
 
 export default function useMpqManager() {
   const activeMpqRef = useRef<string | null>(null);
-  const mounted = useRef<boolean>(false);
 
   const cache = useMpqFileCache({ activeMpqRef });
   const registry = useMpqRegistry({
@@ -13,9 +12,6 @@ export default function useMpqManager() {
   });
 
   useEffect(() => {
-    if (mounted.current) return;
-    mounted.current = true;
-
     registry.refresh();
   }, []);
 
