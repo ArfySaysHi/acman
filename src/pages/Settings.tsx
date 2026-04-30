@@ -1,6 +1,7 @@
-import { useState, JSX, useEffect, useRef } from "react";
+import { useState, JSX, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { useToast } from "../context/ToastContext";
 
 interface Settings {
   client_path?: string;
@@ -22,18 +23,13 @@ function PathField({
 }) {
   return (
     <div className="ayu-panel p-4">
-      <div className="text-ayu-orange text-[11px] font-semibold mb-0.5">
-        {label}
-      </div>
+      <div className="text-ayu-orange text-[11px] font-semibold mb-0.5">{label}</div>
       <div className="text-ayu-dim text-[11px] mb-3">{description}</div>
       <div className="flex items-center gap-2">
         <div className={`ayu-path flex-1 ${value ? "" : "empty"}`}>
           {value ?? "No path selected…"}
         </div>
-        <button
-          onMouseDown={onPick}
-          className="ayu-btn ayu-btn-ghost ayu-btn-md shrink-0"
-        >
+        <button onMouseDown={onPick} className="ayu-btn ayu-btn-ghost ayu-btn-md shrink-0">
           Browse
         </button>
       </div>
@@ -44,11 +40,9 @@ function PathField({
 export default function Settings(): JSX.Element {
   const [settings, setSettings] = useState<Settings>({});
   const [saved, setSaved] = useState(false);
-  const strictModePlacator = useRef<boolean>(false);
+  const { push } = useToast();
 
   useEffect(() => {
-    if (strictModePlacator.current) return;
-    strictModePlacator.current = true;
     handleLoad();
   }, []);
 
@@ -90,7 +84,7 @@ export default function Settings(): JSX.Element {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error("Failed to save settings:", err);
+      push(`Failed to save settings: ${err}`, "error");
     }
   };
 
@@ -98,7 +92,7 @@ export default function Settings(): JSX.Element {
     try {
       setSettings(JSON.parse(await invoke("load_settings")));
     } catch (err) {
-      console.error("Failed to load settings:", err);
+      push(`Failed to load settings: ${err}`, "error");
     }
   };
 
