@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from "react";
+import { ChangeEvent, JSX, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import ProjectDropdown from "../components/dropdowns/ProjectDropdown";
 import useDeployPipeline from "../hooks/useDeployPipeline";
@@ -41,10 +41,15 @@ export default function Dashboard({ worldserverSocket }: DashboardProps): JSX.El
         const prevSelected = localStorage.getItem("lastNoggitProject") ?? null;
         if (prevSelected && p.includes(prevSelected)) setSelected(prevSelected);
       })
-      .catch((err) => push(`Failed to get list of Noggit projects: ${err}`));
+      .catch((err) => push(`Failed to get list of Noggit projects: ${err}`, "error"));
   }, []);
 
   const allDone = steps.every((s) => s.status === "done");
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPatchName(e.target.value);
+    localStorage.setItem("lastPatchName", e.target.value);
+  };
 
   const handleSelect = (option: string) => {
     setSelected(option);
@@ -54,7 +59,7 @@ export default function Dashboard({ worldserverSocket }: DashboardProps): JSX.El
   return (
     <div className="h-full w-full flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <div className="ayu-page-header ayu-page-header-inline justify-between">
+        <div className="ayu-page-header ayu-page-header-inline">
           <h2 className="ayu-heading">Dashboard</h2>
         </div>
         <div className="flex items-center gap-2">
@@ -71,7 +76,7 @@ export default function Dashboard({ worldserverSocket }: DashboardProps): JSX.El
           <input
             className="ayu-input bg-transparent focus:ring-0 text-[12px] w-full"
             value={patchName}
-            onChange={(e) => setPatchName(e.target.value)}
+            onChange={handleChange}
           />
         </div>
         <div>
