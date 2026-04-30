@@ -1,9 +1,7 @@
-import { FileEntry, ViewEntry } from "../types/zod";
+import { FileEntry, ViewEntry } from "../types/types";
 
 export function toPrefix(path: string): string {
-  return path === "/"
-    ? ""
-    : path.replace(/^\//, "").replace(/\//g, "\\") + "\\";
+  return path === "/" ? "" : path.replace(/^\//, "").replace(/\//g, "\\") + "\\";
 }
 
 export function joinPath(current: string, segment: string): string {
@@ -54,12 +52,8 @@ export function filterEntries(files: FileEntry[], path: string): ViewEntry[] {
     }
   }
   return [
-    ...result
-      .filter((e) => e.kind === "dir")
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    ...result
-      .filter((e) => e.kind === "file")
-      .sort((a, b) => a.name.localeCompare(b.name)),
+    ...result.filter((e) => e.kind === "dir").sort((a, b) => a.name.localeCompare(b.name)),
+    ...result.filter((e) => e.kind === "file").sort((a, b) => a.name.localeCompare(b.name)),
   ];
 }
 
@@ -78,10 +72,7 @@ export function pathToMpqFile(path: string): FileEntry {
   };
 }
 
-export function mergeFiles(
-  existing: FileEntry[],
-  incoming: FileEntry[],
-): FileEntry[] {
+export function mergeFiles(existing: FileEntry[], incoming: FileEntry[]): FileEntry[] {
   const map = new Map(existing.map((f) => [f.name, f]));
   for (const f of incoming) map.set(f.name, f);
   return Array.from(map.values());

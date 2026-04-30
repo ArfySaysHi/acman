@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useState } from "react";
-import { ViewEntry } from "../types/zod";
+import { ViewEntry } from "../types/types";
 import FileExplorer from "../components/mpq/FileExplorer";
 import useMpqManager from "../hooks/useMpqManager";
 import useDragDrop from "../hooks/useDragDrop";

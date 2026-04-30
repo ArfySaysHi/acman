@@ -1,5 +1,5 @@
 import { formatBytes } from "../../helpers/mpqHelper";
-import { ViewEntry } from "../../types/zod";
+import { ViewEntry } from "../../types/types";
 
 interface FileExplorerProps {
   data: ViewEntry[];

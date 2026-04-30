@@ -1,1 +1,2 @@
-export type * from "./zod";
+export type * from "./types.ts";
+export * from "./schema.ts";
