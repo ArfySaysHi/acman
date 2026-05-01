@@ -32,4 +32,6 @@ wow-cdbc = { version = "0.6", features = ["serde"] }
 async-trait = "0.1.89"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
+tar = "0.4.45"
+bytes = "1.11.1"
 

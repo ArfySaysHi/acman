@@ -1,4 +1,3 @@
-pub mod add_file;
 pub mod add_files;
 pub mod close_mpq;
 pub mod create_mpq;
@@ -11,7 +10,6 @@ pub mod open_mpq;
 pub mod read_dbc;
 pub mod rename_dir;
 
-pub use add_file::*;
 pub use add_files::*;
 pub use close_mpq::*;
 pub use create_mpq::*;

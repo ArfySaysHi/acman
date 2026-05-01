@@ -3,7 +3,7 @@ use crate::{
         context::DeployContext,
         step::DeployStep,
         steps::{
-            deploy_map_dbc_to_server::DeployMapDbcToServerStep,
+            deploy_dbc_to_server::DeployDbcToServerStep,
             deploy_noggit_project_to_client::DeployNoggitProjectToClientStep,
             pack_mpq::PackMpqStep, restart_world_server::RestartWorldserverStep,
         },
@@ -30,7 +30,7 @@ pub async fn deploy_noggit_project(
     let steps: Vec<Box<dyn DeployStep>> = vec![
         Box::new(PackMpqStep),
         Box::new(DeployNoggitProjectToClientStep),
-        Box::new(DeployMapDbcToServerStep),
+        Box::new(DeployDbcToServerStep),
         Box::new(RestartWorldserverStep),
     ];
 

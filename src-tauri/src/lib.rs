@@ -75,7 +75,6 @@ pub fn run() {
             close_mpq,
             list_files,
             list_mpqs,
-            add_file,
             add_files,
             create_mpq,
             delete_file,
