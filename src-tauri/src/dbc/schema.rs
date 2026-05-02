@@ -1,5 +1,7 @@
 use wow_cdbc::{FieldType, Schema, SchemaField};
 
+// TODO: Many of these schemas are wrongly constructed, either fix or delete most of them for now
+// and build more of them out later
 pub fn get_known_schema(dbc_name: &str) -> Option<Schema> {
     match dbc_name {
         "Spell" => Some(spell()),
@@ -44,6 +46,9 @@ pub fn get_known_schema(dbc_name: &str) -> Option<Schema> {
         "Achievement_Criteria" => Some(achievement_criteria()),
         "BattlemasterList" => Some(battlemaster_list()),
         "LFGDungeons" => Some(lfg_dungeons()),
+        "GroundEffectTexture" => Some(ground_effect_texture()),
+        "GroundEffectDoodad" => Some(ground_effect_doodad()),
+        "AreaGroup" => Some(area_group()),
         _ => None,
     }
 }
@@ -70,25 +75,17 @@ fn s(name: &str) -> SchemaField {
     field(name, FieldType::String, None)
 }
 
-fn arr_i(base: &str, count: usize) -> Vec<SchemaField> {
-    (0..count)
-        .map(|n| field(&format!("{base}_{n}"), FieldType::Int32, Some(count)))
-        .collect()
+fn flat_i(base: &str, count: usize) -> Vec<SchemaField> {
+    (0..count).map(|n| i(&format!("{base}_{n}"))).collect()
 }
-fn arr_u(base: &str, count: usize) -> Vec<SchemaField> {
-    (0..count)
-        .map(|n| field(&format!("{base}_{n}"), FieldType::UInt32, Some(count)))
-        .collect()
+fn flat_u(base: &str, count: usize) -> Vec<SchemaField> {
+    (0..count).map(|n| u(&format!("{base}_{n}"))).collect()
 }
-fn arr_f(base: &str, count: usize) -> Vec<SchemaField> {
-    (0..count)
-        .map(|n| field(&format!("{base}_{n}"), FieldType::Float32, Some(count)))
-        .collect()
+fn flat_f(base: &str, count: usize) -> Vec<SchemaField> {
+    (0..count).map(|n| f(&format!("{base}_{n}"))).collect()
 }
-fn arr_s(base: &str, count: usize) -> Vec<SchemaField> {
-    (0..count)
-        .map(|n| field(&format!("{base}_{n}"), FieldType::String, Some(count)))
-        .collect()
+fn flat_s(base: &str, count: usize) -> Vec<SchemaField> {
+    (0..count).map(|n| s(&format!("{base}_{n}"))).collect()
 }
 
 fn loc(base: &str) -> Vec<SchemaField> {
@@ -110,6 +107,19 @@ fn schema(name: &str, fields: Vec<SchemaField>) -> Schema {
     }
 }
 
+fn area_group() -> Schema {
+    let mut f = vec![i("ID")];
+
+    f.extend(flat_i("AreaGroup", 6));
+    f.extend(vec![i("LinkedAreaGroupID")]);
+    Schema {
+        name: "AreaGroup".to_string(),
+        fields: f,
+        key_field_index: Some(0),
+        is_validated: false,
+    }
+}
+
 fn spell() -> Schema {
     let mut f = vec![
         i("ID"),
@@ -125,8 +135,8 @@ fn spell() -> Schema {
         i("AttributesExF"),
         i("AttributesExG"),
     ];
-    f.extend(arr_i("ShapeshiftMask", 2));
-    f.extend(arr_i("ShapeshiftExclude", 2));
+    f.extend(flat_i("ShapeshiftMask", 2));
+    f.extend(flat_i("ShapeshiftExclude", 2));
     f.extend([
         i("Targets"),
         i("TargetCreatureType"),
@@ -162,35 +172,35 @@ fn spell() -> Schema {
     ]);
     f.push(self::f("Speed"));
     f.extend([i("ModalNextSpell"), i("CumulativeAura")]);
-    f.extend(arr_i("Totem", 2));
-    f.extend(arr_i("Reagent", 8));
-    f.extend(arr_i("ReagentCount", 8));
+    f.extend(flat_i("Totem", 2));
+    f.extend(flat_i("Reagent", 8));
+    f.extend(flat_i("ReagentCount", 8));
     f.extend([
         i("EquippedItemClass"),
         i("EquippedItemSubclass"),
         i("EquippedItemInvTypes"),
     ]);
-    f.extend(arr_i("Effect", 3));
-    f.extend(arr_i("EffectDieSides", 3));
-    f.extend(arr_f("EffectRealPointsPerLevel", 3));
-    f.extend(arr_i("EffectBasePoints", 3));
-    f.extend(arr_i("EffectMechanic", 3));
-    f.extend(arr_i("ImplicitTargetA", 3));
-    f.extend(arr_i("ImplicitTargetB", 3));
-    f.extend(arr_i("EffectRadiusIndex", 3));
-    f.extend(arr_i("EffectAura", 3));
-    f.extend(arr_i("EffectAuraPeriod", 3));
-    f.extend(arr_f("EffectAmplitude", 3));
-    f.extend(arr_i("EffectChainTargets", 3));
-    f.extend(arr_i("EffectItemType", 3));
-    f.extend(arr_i("EffectMiscValue", 3));
-    f.extend(arr_i("EffectMiscValueB", 3));
-    f.extend(arr_i("EffectTriggerSpell", 3));
-    f.extend(arr_f("EffectPointsPerCombo", 3));
-    f.extend(arr_i("EffectSpellClassMaskA", 3));
-    f.extend(arr_i("EffectSpellClassMaskB", 3));
-    f.extend(arr_i("EffectSpellClassMaskC", 3));
-    f.extend(arr_i("SpellVisualID", 2));
+    f.extend(flat_i("Effect", 3));
+    f.extend(flat_i("EffectDieSides", 3));
+    f.extend(flat_f("EffectRealPointsPerLevel", 3));
+    f.extend(flat_i("EffectBasePoints", 3));
+    f.extend(flat_i("EffectMechanic", 3));
+    f.extend(flat_i("ImplicitTargetA", 3));
+    f.extend(flat_i("ImplicitTargetB", 3));
+    f.extend(flat_i("EffectRadiusIndex", 3));
+    f.extend(flat_i("EffectAura", 3));
+    f.extend(flat_i("EffectAuraPeriod", 3));
+    f.extend(flat_f("EffectAmplitude", 3));
+    f.extend(flat_i("EffectChainTargets", 3));
+    f.extend(flat_i("EffectItemType", 3));
+    f.extend(flat_i("EffectMiscValue", 3));
+    f.extend(flat_i("EffectMiscValueB", 3));
+    f.extend(flat_i("EffectTriggerSpell", 3));
+    f.extend(flat_f("EffectPointsPerCombo", 3));
+    f.extend(flat_i("EffectSpellClassMaskA", 3));
+    f.extend(flat_i("EffectSpellClassMaskB", 3));
+    f.extend(flat_i("EffectSpellClassMaskC", 3));
+    f.extend(flat_i("SpellVisualID", 2));
     f.extend([i("SpellIconID"), i("ActiveIconID"), i("SpellPriority")]);
     f.extend(loc("Name"));
     f.extend(loc("NameSubtext"));
@@ -203,20 +213,20 @@ fn spell() -> Schema {
         i("MaxTargetLevel"),
         i("SpellClassSet"),
     ]);
-    f.extend(arr_i("SpellClassMask", 3));
+    f.extend(flat_i("SpellClassMask", 3));
     f.extend([
         i("MaxTargets"),
         i("DefenseType"),
         i("PreventionType"),
         i("StanceBarOrder"),
     ]);
-    f.extend(arr_f("EffectChainAmplitude", 3));
+    f.extend(flat_f("EffectChainAmplitude", 3));
     f.extend([
         i("MinFactionID"),
         i("MinReputation"),
         i("RequiredAuraVision"),
     ]);
-    f.extend(arr_i("RequiredTotemCategoryID", 2));
+    f.extend(flat_i("RequiredTotemCategoryID", 2));
     f.extend([
         i("RequiredAreasID"),
         i("SchoolMask"),
@@ -224,7 +234,7 @@ fn spell() -> Schema {
         i("SpellMissileID"),
         i("PowerDisplayID"),
     ]);
-    f.extend(arr_f("EffectBonusCoefficient", 3));
+    f.extend(flat_f("EffectBonusCoefficient", 3));
     f.extend([i("DescriptionVariablesID"), i("Difficulty")]);
     schema("Spell", f)
 }
@@ -246,27 +256,26 @@ fn item() -> Schema {
 }
 
 fn map() -> Schema {
-    // 5 scalars + 17 (MapName loc) + 1 + 17 (MapDesc0 loc) + 17 (MapDesc1 loc) + 9 scalars = 66
     let mut fields = vec![
-        i("ID"),           // 0
-        s("Directory"),    // 1
-        i("InstanceType"), // 2
-        i("Flags"),        // 3
-        i("PVP"),          // 4
+        i("ID"),
+        s("Directory"),
+        i("InstanceType"),
+        i("Flags"),
+        i("PVP"),
     ];
-    fields.extend(loc("MapName")); // 5-21  (16 strings + 1 flags = 17)
-    fields.push(i("AreaTableID")); // 22
-    fields.extend(loc("MapDescription0")); // 23-39 (17)
-    fields.extend(loc("MapDescription1")); // 40-56 (17)
-    fields.push(i("LoadingScreenID")); // 57
-    fields.push(f("MinimapIconScale")); // 58
-    fields.push(i("CorpseMapID")); // 59
-    fields.push(f("Corpse_0")); // 60
-    fields.push(f("Corpse_1")); // 61
-    fields.push(i("TimeOfDayOverride")); // 62
-    fields.push(i("ExpansionID")); // 63
-    fields.push(i("RaidOffset")); // 64
-    fields.push(i("MaxPlayers")); // 65
+    fields.extend(loc("MapName"));
+    fields.push(i("AreaTableID"));
+    fields.extend(loc("MapDescription0"));
+    fields.extend(loc("MapDescription1"));
+    fields.push(i("LoadingScreenID"));
+    fields.push(f("MinimapIconScale"));
+    fields.push(i("CorpseMapID"));
+    fields.push(f("Corpse_0"));
+    fields.push(f("Corpse_1"));
+    fields.push(i("TimeOfDayOverride"));
+    fields.push(i("ExpansionID"));
+    fields.push(i("RaidOffset"));
+    fields.push(i("MaxPlayers"));
     schema("Map", fields)
 }
 
@@ -286,20 +295,19 @@ fn area_table() -> Schema {
     ];
     f.extend(loc("AreaName"));
     f.push(i("FactionGroupMask"));
-    f.extend(arr_i("LiquidTypeID", 4));
+    f.extend(flat_i("LiquidTypeID", 4));
     f.push(self::f("MinElevation"));
     f.push(self::f("Ambient_multiplier"));
     f.push(i("LightID"));
     schema("AreaTable", f)
 }
 
+// FIXED: removed DamageBonusStat (not present in 3.3.5 struct), removed CinematicSequenceID
+// and Required_expansion (not in 3.3.5), added missing trailing fields:
+// AttackPowerPerStrength, AttackPowerPerAgility, RangedAttackPowerPerAgility, DefaultSpec.
+// Also fixed field order: DisplayPower comes before PetNameToken per the wiki struct.
 fn chr_classes() -> Schema {
-    let mut f = vec![
-        i("ID"),
-        i("DamageBonusStat"),
-        i("DisplayPower"),
-        s("PetNameToken"),
-    ];
+    let mut f = vec![i("ID"), i("DisplayPower"), s("PetNameToken")];
     f.extend(loc("Name"));
     f.extend(loc("Name_female"));
     f.extend(loc("Name_male"));
@@ -309,6 +317,10 @@ fn chr_classes() -> Schema {
         i("Flags"),
         i("CinematicSequenceID"),
         i("Required_expansion"),
+        i("AttackPowerPerStrength"),
+        i("AttackPowerPerAgility"),
+        i("RangedAttackPowerPerAgility"),
+        i("DefaultSpec"),
     ]);
     schema("ChrClasses", f)
 }
@@ -333,18 +345,18 @@ fn chr_races() -> Schema {
     f.extend(loc("Name"));
     f.extend(loc("Name_female"));
     f.extend(loc("Name_male"));
-    f.extend(arr_s("FacialHairCustomization", 2));
+    f.extend(flat_s("FacialHairCustomization", 2));
     f.extend([s("HairCustomization"), i("Required_expansion")]);
     schema("ChrRaces", f)
 }
 
 fn talent() -> Schema {
     let mut f = vec![i("ID"), i("TabID"), i("TierID"), i("ColumnIndex")];
-    f.extend(arr_i("SpellRank", 9));
-    f.extend(arr_i("PrereqTalent", 3));
-    f.extend(arr_i("PrereqRank", 3));
+    f.extend(flat_i("SpellRank", 9));
+    f.extend(flat_i("PrereqTalent", 3));
+    f.extend(flat_i("PrereqRank", 3));
     f.extend([i("Flags"), i("RequiredSpellID")]);
-    f.extend(arr_i("CategoryMask", 2));
+    f.extend(flat_i("CategoryMask", 2));
     schema("Talent", f)
 }
 
@@ -386,16 +398,16 @@ fn skill_line_ability() -> Schema {
         i("TrivialSkillLineRankHigh"),
         i("TrivialSkillLineRankLow"),
     ];
-    f.extend(arr_i("CharacterPoints", 2));
+    f.extend(flat_i("CharacterPoints", 2));
     schema("SkillLineAbility", f)
 }
 
 fn spell_item_enchantment() -> Schema {
     let mut f = vec![i("ID"), i("Charges")];
-    f.extend(arr_i("Effect", 3));
-    f.extend(arr_i("EffectPointsMin", 3));
-    f.extend(arr_i("EffectPointsMax", 3));
-    f.extend(arr_i("EffectArg", 3));
+    f.extend(flat_i("Effect", 3));
+    f.extend(flat_i("EffectPointsMin", 3));
+    f.extend(flat_i("EffectPointsMax", 3));
+    f.extend(flat_i("EffectArg", 3));
     f.extend(loc("Name"));
     f.extend([
         i("ItemVisual"),
@@ -500,10 +512,12 @@ fn spell_focus_object() -> Schema {
     schema("SpellFocusObject", f)
 }
 
+// FIXED: Immunity_possible is a boolean/uint, not signed int.
+// Internal_name is a string ref, not int.
 fn spell_dispel_type() -> Schema {
     let mut f = vec![i("ID")];
     f.extend(loc("Name"));
-    f.extend([i("Mask"), i("Immunity_possible"), i("Internal_name")]);
+    f.extend([i("Mask"), u("Immunity_possible"), s("Internal_name")]);
     schema("SpellDispelType", f)
 }
 
@@ -511,52 +525,58 @@ fn spell_category() -> Schema {
     schema("SpellCategory", vec![i("ID"), i("Flags")])
 }
 
+// FIXED: field order corrected — Name loc comes after BonusActionBar per the 3.3.5 struct.
+// CreatureDisplayID expanded from 2 to 4 entries per the wiki struct.
+// Added missing MountTypeID and ExitSoundEntriesID at the end.
 fn spell_shapeshift_form() -> Schema {
-    let mut f = vec![i("ID"), i("BonusActionBar"), i("Flags")];
+    let mut f = vec![i("ID"), i("BonusActionBar")];
     f.extend(loc("Name"));
     f.extend([
+        i("Flags"),
         i("CreatureType"),
         i("AttackIconID"),
         i("CombatRoundTime"),
-        i("CreatureDisplayID_A"),
-        i("CreatureDisplayID_H"),
     ]);
-    f.extend(arr_i("PresetSpellID", 8));
+    f.extend(flat_i("CreatureDisplayID", 4));
+    f.extend(flat_i("PresetSpellID", 8));
+    f.extend([i("MountTypeID"), i("ExitSoundEntriesID")]);
     schema("SpellShapeshiftForm", f)
 }
 
+// FIXED: added missing trailing fields MissileCastOffset (float[3]) and
+// MissileImpactOffset (float[3]) after PersistentAreaKit per the wiki struct.
 fn spell_visual() -> Schema {
-    schema(
-        "SpellVisual",
-        vec![
-            i("ID"),
-            i("PrecastKit"),
-            i("CastKit"),
-            i("ImpactKit"),
-            i("StateKit"),
-            i("StateDoneKit"),
-            i("ChannelKit"),
-            i("HasMissile"),
-            i("MissileModel"),
-            i("MissilePathType"),
-            i("MissileDestinationAttachment"),
-            i("MissileSound"),
-            i("AnimEventSoundID"),
-            i("Flags"),
-            i("CasterImpactKit"),
-            i("TargetImpactKit"),
-            i("MissileAttachment"),
-            i("MissileFollowGroundHeight"),
-            i("MissileFollowGroundDropSpeed"),
-            i("MissileFollowGroundApproach"),
-            i("MissileFollowGroundFlags"),
-            i("MissileMotionID"),
-            i("MissileTargetingKit"),
-            i("InstantAreaKit"),
-            i("ImpactAreaKit"),
-            i("PersistentAreaKit"),
-        ],
-    )
+    let mut f = vec![
+        i("ID"),
+        i("PrecastKit"),
+        i("CastKit"),
+        i("ImpactKit"),
+        i("StateKit"),
+        i("StateDoneKit"),
+        i("ChannelKit"),
+        i("HasMissile"),
+        i("MissileModel"),
+        i("MissilePathType"),
+        i("MissileDestinationAttachment"),
+        i("MissileSound"),
+        i("AnimEventSoundID"),
+        i("Flags"),
+        i("CasterImpactKit"),
+        i("TargetImpactKit"),
+        i("MissileAttachment"),
+        i("MissileFollowGroundHeight"),
+        i("MissileFollowGroundDropSpeed"),
+        i("MissileFollowGroundApproach"),
+        i("MissileFollowGroundFlags"),
+        i("MissileMotionID"),
+        i("MissileTargetingKit"),
+        i("InstantAreaKit"),
+        i("ImpactAreaKit"),
+        i("PersistentAreaKit"),
+    ];
+    f.extend(flat_f("MissileCastOffset", 3));
+    f.extend(flat_f("MissileImpactOffset", 3));
+    schema("SpellVisual", f)
 }
 
 fn creature_display_info() -> Schema {
@@ -627,7 +647,7 @@ fn creature_family() -> Schema {
         self::f("MaxScale"),
         i("MaxScaleLevel"),
     ];
-    f.extend(arr_i("SkillLine", 2));
+    f.extend(flat_i("SkillLine", 2));
     f.extend([i("PetFoodMask"), i("PetTalentType"), i("CategoryEnumID")]);
     f.extend(loc("Name"));
     f.push(s("IconFile"));
@@ -643,9 +663,9 @@ fn creature_type() -> Schema {
 
 fn taxi_nodes() -> Schema {
     let mut f = vec![i("ID"), i("ContinentID")];
-    f.extend(arr_f("Pos", 3));
+    f.extend(flat_f("Pos", 3));
     f.extend(loc("Name"));
-    f.extend(arr_i("MountCreatureID", 2));
+    f.extend(flat_i("MountCreatureID", 2));
     schema("TaxiNodes", f)
 }
 
@@ -677,13 +697,13 @@ fn taxi_path_node() -> Schema {
 
 fn faction() -> Schema {
     let mut f = vec![i("ID"), i("ReputationIndex")];
-    f.extend(arr_u("ReputationRaceMask", 4));
-    f.extend(arr_u("ReputationClassMask", 4));
-    f.extend(arr_i("ReputationBase", 4));
-    f.extend(arr_u("ReputationFlags", 4));
+    f.extend(flat_u("ReputationRaceMask", 4));
+    f.extend(flat_u("ReputationClassMask", 4));
+    f.extend(flat_i("ReputationBase", 4));
+    f.extend(flat_u("ReputationFlags", 4));
     f.extend([i("ParentFactionID")]);
-    f.extend(arr_f("ParentFactionMod", 2));
-    f.extend(arr_u("ParentFactionCap", 2));
+    f.extend(flat_f("ParentFactionMod", 2));
+    f.extend(flat_u("ParentFactionCap", 2));
     f.extend(loc("Name"));
     f.extend(loc("Description"));
     schema("Faction", f)
@@ -698,8 +718,8 @@ fn faction_template() -> Schema {
         i("FriendGroup"),
         i("EnemyGroup"),
     ];
-    f.extend(arr_i("Enemies", 4));
-    f.extend(arr_i("Friend", 4));
+    f.extend(flat_i("Enemies", 4));
+    f.extend(flat_i("Friend", 4));
     schema("FactionTemplate", f)
 }
 
@@ -738,7 +758,7 @@ fn item_display_info() -> Schema {
 
 fn item_random_properties() -> Schema {
     let mut f = vec![i("ID"), s("Name")];
-    f.extend(arr_i("Enchantment", 5));
+    f.extend(flat_i("Enchantment", 5));
     f.extend(loc("Name_lang"));
     schema("ItemRandomProperties", f)
 }
@@ -746,9 +766,9 @@ fn item_random_properties() -> Schema {
 fn item_set() -> Schema {
     let mut f = vec![i("ID")];
     f.extend(loc("Name"));
-    f.extend(arr_i("ItemID", 17));
-    f.extend(arr_i("SetSpellID", 8));
-    f.extend(arr_i("SetThreshold", 8));
+    f.extend(flat_i("ItemID", 17));
+    f.extend(flat_i("SetSpellID", 8));
+    f.extend(flat_i("SetThreshold", 8));
     f.extend([i("RequiredSkill"), i("RequiredSkillRank")]);
     schema("ItemSet", f)
 }
@@ -774,7 +794,7 @@ fn glyph_properties() -> Schema {
 }
 
 fn achievement() -> Schema {
-    let mut f = vec![i("ID"), i("Faction"), i("MapID")];
+    let mut f = vec![i("ID"), i("Faction"), i("MapID"), i("Supercedes")];
     f.extend(loc("Title"));
     f.extend(loc("Description"));
     f.extend([
@@ -783,10 +803,9 @@ fn achievement() -> Schema {
         i("UIOrder"),
         i("Flags"),
         i("IconID"),
-        i("TitleReward"),
-        i("Count"),
-        i("RefAchievement"),
     ]);
+    f.extend(loc("Reward"));
+    f.extend([i("MinimumCriteria"), i("SharesCriteria")]);
     schema("Achievement", f)
 }
 
@@ -795,8 +814,7 @@ fn achievement_criteria() -> Schema {
         i("ID"),
         i("AchievementID"),
         i("Type"),
-        i("Asset_0"),
-        i("Asset_1"),
+        i("Asset"),
         i("Quantity"),
         i("StartEvent"),
         i("StartAsset"),
@@ -816,7 +834,7 @@ fn achievement_criteria() -> Schema {
 
 fn battlemaster_list() -> Schema {
     let mut f = vec![i("ID")];
-    f.extend(arr_i("MapID", 8));
+    f.extend(flat_i("MapID", 8));
     f.extend([
         i("InstanceType"),
         i("GroupsAllowed"),
@@ -856,4 +874,20 @@ fn lfg_dungeons() -> Schema {
     ]);
     f.extend(loc("Description"));
     schema("LFGDungeons", f)
+}
+
+// NEW: GroundEffectTexture — 3.3.5 struct includes doodadWeight[4] which vanilla lacked.
+// Fields: ID, DoodadID[4], DoodadWeight[4], Density, Sound
+fn ground_effect_texture() -> Schema {
+    let mut f = vec![i("ID")];
+    f.extend(flat_i("DoodadID", 4));
+    f.extend(flat_i("DoodadWeight", 4));
+    f.extend([i("Density"), i("Sound")]);
+    schema("GroundEffectTexture", f)
+}
+
+// NEW: GroundEffectDoodad — referenced by GroundEffectTexture.DoodadID entries.
+// Fields per wowdev wiki: ID, InternalName (string)
+fn ground_effect_doodad() -> Schema {
+    schema("GroundEffectDoodad", vec![u("ID"), s("InternalName")])
 }

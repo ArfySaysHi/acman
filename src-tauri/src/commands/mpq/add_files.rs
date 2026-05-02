@@ -1,9 +1,9 @@
+use crate::types::structs::SharedAppState;
 use std::path::PathBuf;
-
 use wow_mpq::MutableArchive;
 
-use crate::types::structs::SharedAppState;
-
+// TODO: Major bug, this function deadlocks due to keeping mutex lock for an excessive amount of
+// time, fix it me >:(
 #[tauri::command]
 pub async fn add_files(
     state: tauri::State<'_, SharedAppState>,
@@ -30,6 +30,8 @@ pub async fn add_files(
     let archive_path_buf = instance.path.clone();
     instance.archive = MutableArchive::open(&archive_path_buf)
         .map_err(|e| format!("Failed to reopen archive after write: {e}"))?;
+
+    // TODO: Emit the added files to the frontend to update values
 
     Ok(())
 }
