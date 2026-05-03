@@ -319,6 +319,41 @@ pub fn parse_entry_def(input: &str) -> Result<EntryDef, String> {
     })
 }
 
+fn line_type(line: &str) -> &str {
+    if line.is_empty() {
+        "blank"
+    } else if line.starts_with("BUILD ") {
+        "build"
+    } else if line.starts_with("LAYOUT ") {
+        "layout"
+    } else if line.starts_with("COMMENT ") {
+        "comment"
+    } else if line.starts_with("COLUMNS ") {
+        "columns"
+    } else if ["int ", "uint ", "float ", "string ", "locstring "]
+        .iter()
+        .any(|p| line.starts_with(p))
+    {
+        "columndef"
+    } else {
+        "entry"
+    }
+}
+
 pub fn parse(input: &str) -> Result<DbdFile, String> {
+    let mut lines = input.lines().peekable();
+    let mut columns: Vec<ColumnDef> = vec![];
+    let mut definitions: Vec<VersionDef> = vec![];
+
+    lines.next().ok_or("Expected COLUMNS header")?;
+
+    while let Some(&line) = lines.peek() {
+        if line.is_empty() {
+            break;
+        }
+        columns.push(parse_column_def(line)?);
+        lines.next();
+    }
+
     todo!()
 }
