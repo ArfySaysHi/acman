@@ -1,0 +1,3 @@
+[submodule "src-tauri/definitions-repo"]
+	path = src-tauri/definitions-repo
+	url = https://github.com/wowdev/WoWDBDefs
