@@ -22,28 +22,32 @@ impl TryFrom<&str> for ColType {
     }
 }
 
+#[derive(Debug)]
 pub struct DbdFile {
-    columns: Vec<ColumnDef>,
-    definitions: Vec<VersionDef>,
+    pub columns: Vec<ColumnDef>,
+    pub definitions: Vec<VersionDef>,
 }
 
+#[derive(Debug)]
 pub struct ColumnDef {
-    col_type: ColType,
-    name: String,
-    foreign: Option<(String, String)>,
-    is_confirmed: bool,
-    comment: Option<String>,
+    pub col_type: ColType,
+    pub name: String,
+    pub foreign: Option<(String, String)>,
+    pub is_confirmed: bool,
+    pub comment: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct VersionDef {
-    builds: Vec<BuildRange>,
-    layouts: Vec<String>,
-    entries: Vec<EntryDef>,
+    pub builds: Vec<BuildRange>,
+    pub layouts: Vec<String>,
+    pub entries: Vec<EntryDef>,
 }
 
+#[derive(Debug)]
 pub struct BuildRange {
-    min: BuildVersion,
-    max: Option<BuildVersion>,
+    pub min: BuildVersion,
+    pub max: Option<BuildVersion>,
 }
 
 impl BuildRange {
@@ -55,21 +59,22 @@ impl BuildRange {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct BuildVersion {
-    major: u16,
-    minor: u16,
-    patch: u16,
-    build: u32,
+    pub major: u16,
+    pub minor: u16,
+    pub patch: u16,
+    pub build: u32,
 }
 
+#[derive(Debug)]
 pub struct EntryDef {
-    column: String,
-    annotations: Vec<String>,
-    int_width: Option<u8>,
-    is_unsigned: bool,
-    array_size: Option<usize>,
-    comment: Option<String>,
+    pub column: String,
+    pub annotations: Vec<String>,
+    pub int_width: Option<u8>,
+    pub is_unsigned: bool,
+    pub array_size: Option<usize>,
+    pub comment: Option<String>,
 }
 
 fn parse_build_version(input: &str) -> Result<BuildVersion, String> {
@@ -419,6 +424,7 @@ pub fn parse(input: &str) -> Result<DbdFile, String> {
     let mut definitions: Vec<VersionDef> = vec![];
 
     while lines.peek().is_some() {
+        // skip blank lines between version blocks
         while lines.peek().map(|l| l.is_empty()) == Some(true) {
             lines.next();
         }

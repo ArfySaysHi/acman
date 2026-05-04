@@ -33,10 +33,6 @@ fn discover_schema<'a>(
     raw_records: &'a wow_cdbc::RecordSet,
     dbc_name: &str,
 ) -> Result<wow_cdbc::Schema, String> {
-    if let Some(schema) = crate::dbc::schema::get_known_schema(dbc_name) {
-        return Ok(schema);
-    }
-
     SchemaDiscoverer::new(parser.header(), parser.data(), raw_records.string_block())
         .with_detect_key(true)
         .with_validate_strings(true)
@@ -94,20 +90,5 @@ pub async fn read_dbc(
     id: u32,
     path: String,
 ) -> Result<DbcResponse, String> {
-    let state = state.inner().clone();
-    let dbc_raw = extract_file(state, id, path.clone()).await?;
-
-    let dbc_name = extract_dbc_name(&path);
-
-    let parser = parse_dbc_bytes(&dbc_raw)?;
-    let raw_records = parser
-        .parse_records()
-        .map_err(|e| format!("Failed to parse records: {e}"))?;
-
-    let schema = discover_schema(&parser, &raw_records, dbc_name)?;
-    let columns = schema.fields.iter().map(|f| f.name.clone()).collect();
-
-    let record_set = parse_records_with_schema(&dbc_raw, schema)?;
-
-    Ok(build_response(record_set, columns))
+    todo!()
 }
