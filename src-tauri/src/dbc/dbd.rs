@@ -72,7 +72,7 @@ pub struct EntryDef {
     comment: Option<String>,
 }
 
-pub fn parse_build_version(input: &str) -> Result<BuildVersion, String> {
+fn parse_build_version(input: &str) -> Result<BuildVersion, String> {
     let mut parts = input.split('.');
 
     let bv = BuildVersion {
@@ -107,7 +107,7 @@ pub fn parse_build_version(input: &str) -> Result<BuildVersion, String> {
     Ok(bv)
 }
 
-pub fn parse_build_line(input: &str) -> Result<Vec<BuildRange>, String> {
+fn parse_build_line(input: &str) -> Result<Vec<BuildRange>, String> {
     let clean = input
         .strip_prefix("BUILD ")
         .ok_or("Failed to strip BUILD prefix from line")?;
@@ -155,7 +155,7 @@ fn parse_column_type(input: &str) -> Result<(ColType, Option<(String, String)>),
 }
 
 fn parse_column_name(input: &str) -> Result<(&str, Option<String>, bool), String> {
-    let mut name_split = input.split("//");
+    let mut name_split = input.splitn(2, "//");
 
     let mut col_name = name_split.next().ok_or("Failed to read column name")?;
     let col_comment = name_split.next().to_owned();
@@ -178,7 +178,7 @@ fn parse_column_name(input: &str) -> Result<(&str, Option<String>, bool), String
     }
 }
 
-pub fn parse_column_def(input: &str) -> Result<ColumnDef, String> {
+fn parse_column_def(input: &str) -> Result<ColumnDef, String> {
     let mut col_split = input.splitn(2, ' ');
     let col_type = parse_column_type(col_split.next().ok_or("Failed to read column type")?)?;
     let col_name = parse_column_name(col_split.next().ok_or("Failed to read column name")?)?;
@@ -187,7 +187,7 @@ pub fn parse_column_def(input: &str) -> Result<ColumnDef, String> {
         col_type: col_type.0,
         name: col_name.0.to_string(),
         foreign: col_type.1,
-        is_confirmed: col_name.2,
+        is_confirmed: !col_name.2,
         comment: col_name.1,
     })
 }
@@ -272,7 +272,7 @@ fn parse_entry_array(s: &str) -> Result<(Option<usize>, &str), String> {
             .ok_or("Failed to parse array size")?
             .trim_start_matches('[')
             .parse::<usize>()
-            .map_err(|e| format!("Failed to parse the content of entry array into u32: {e}"))?;
+            .map_err(|e| format!("Failed to parse the content of entry array into usize: {e}"))?;
 
         Ok((
             Some(array_val),
@@ -300,7 +300,7 @@ fn parse_inline_comment(s: &str) -> Result<Option<String>, String> {
     }
 }
 
-pub fn parse_entry_def(input: &str) -> Result<EntryDef, String> {
+fn parse_entry_def(input: &str) -> Result<EntryDef, String> {
     let s = input;
 
     let (annotations, s) = parse_annotations(s)?;
@@ -328,7 +328,7 @@ fn line_type(line: &str) -> &str {
         "layout"
     } else if line.starts_with("COMMENT ") {
         "comment"
-    } else if line.starts_with("COLUMNS ") {
+    } else if line.starts_with("COLUMNS") {
         "columns"
     } else if ["int ", "uint ", "float ", "string ", "locstring "]
         .iter()
@@ -340,20 +340,133 @@ fn line_type(line: &str) -> &str {
     }
 }
 
-pub fn parse(input: &str) -> Result<DbdFile, String> {
-    let mut lines = input.lines().peekable();
+fn parse_column_block<'a, I>(lines: &mut std::iter::Peekable<I>) -> Result<Vec<ColumnDef>, String>
+where
+    I: Iterator<Item = &'a str>,
+{
     let mut columns: Vec<ColumnDef> = vec![];
-    let mut definitions: Vec<VersionDef> = vec![];
+    let header = lines.next().ok_or("Expected COLUMNS header")?;
 
-    lines.next().ok_or("Expected COLUMNS header")?;
+    if header != "COLUMNS" {
+        return Err(format!("Expected COLUMNS header, got: {header}"));
+    }
 
     while let Some(&line) = lines.peek() {
         if line.is_empty() {
+            lines.next();
             break;
         }
+
         columns.push(parse_column_def(line)?);
         lines.next();
     }
 
-    todo!()
+    Ok(columns)
+}
+
+fn parse_version_block<'a, I>(lines: &mut std::iter::Peekable<I>) -> Result<VersionDef, String>
+where
+    I: Iterator<Item = &'a str>,
+{
+    let mut builds: Vec<BuildRange> = vec![];
+    let mut layouts: Vec<String> = vec![];
+    let mut entries: Vec<EntryDef> = vec![];
+
+    while let Some(&line) = lines.peek() {
+        let line_category = line_type(line);
+        if line_category == "blank" {
+            lines.next();
+            break;
+        }
+
+        match line_category {
+            "build" => {
+                builds.extend(parse_build_line(line)?);
+                lines.next();
+            }
+            "layout" => {
+                layouts.extend(
+                    line.strip_prefix("LAYOUT ")
+                        .ok_or("Failed to strip prefix from LAYOUT")?
+                        .split(", ")
+                        .map(|s| s.to_string()),
+                );
+                lines.next();
+            }
+            "entry" => {
+                entries.push(parse_entry_def(line)?);
+                lines.next();
+            }
+            _ => break,
+        }
+    }
+
+    if builds.is_empty() && layouts.is_empty() && entries.is_empty() {
+        return Err("Empty version definition".to_string());
+    }
+
+    Ok(VersionDef {
+        builds,
+        layouts,
+        entries,
+    })
+}
+
+pub fn parse(input: &str) -> Result<DbdFile, String> {
+    let mut lines = input.lines().map(str::trim).peekable();
+
+    let columns = parse_column_block(&mut lines)?;
+    let mut definitions: Vec<VersionDef> = vec![];
+
+    while lines.peek().is_some() {
+        while lines.peek().map(|l| l.is_empty()) == Some(true) {
+            lines.next();
+        }
+        if lines.peek().is_none() {
+            break;
+        }
+        definitions.push(parse_version_block(&mut lines)?);
+    }
+
+    Ok(DbdFile {
+        columns,
+        definitions,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_build_version() {
+        let result = parse_build_version("3.3.5.12340").unwrap();
+        assert_eq!(result.major, 3);
+        assert_eq!(result.minor, 3);
+        assert_eq!(result.patch, 5);
+        assert_eq!(result.build, 12340);
+    }
+
+    #[test]
+    fn test_parse_build_version_extra_component() {
+        assert!(parse_build_version("3.3.5.12340.extra").is_err());
+    }
+
+    #[test]
+    fn test_parse_simple_block() {
+        let input = "\
+COLUMNS
+int ID
+locstring Name_lang
+
+BUILD 3.3.5.12340
+$id$ID<32>
+Name_lang
+";
+        let result = parse(input).unwrap();
+        assert_eq!(result.columns.len(), 2);
+        assert_eq!(result.definitions.len(), 1);
+        assert_eq!(result.definitions[0].entries.len(), 2);
+        assert_eq!(result.definitions[0].builds.len(), 1);
+    }
 }
