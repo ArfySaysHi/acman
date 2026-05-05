@@ -61,6 +61,7 @@ export default function WorldServer({ worldserverSocket }: WorldServerProps): JS
           readOnly={!connected}
           placeholder={connected ? "Enter command…" : "Server not connected"}
           className="ayu-input flex-1 border-0 bg-transparent p-0 focus:ring-0 text-[12px]"
+          autoFocus
         />
       </div>
     </div>

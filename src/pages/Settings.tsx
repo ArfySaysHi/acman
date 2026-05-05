@@ -22,14 +22,14 @@ function PathField({
   onPick: () => void;
 }) {
   return (
-    <div className="ayu-panel p-4">
+    <div className="ayu-panel-alt p-4">
       <div className="text-ayu-orange text-[11px] font-semibold mb-0.5">{label}</div>
       <div className="text-ayu-dim text-[11px] mb-3">{description}</div>
       <div className="flex items-center gap-2">
         <div className={`ayu-path flex-1 ${value ? "" : "empty"}`}>
           {value ?? "No path selected…"}
         </div>
-        <button onMouseDown={onPick} className="ayu-btn ayu-btn-ghost ayu-btn-md shrink-0">
+        <button onMouseDown={onPick} className="ayu-btn ayu-btn-orange ayu-btn-md shrink-0">
           Browse
         </button>
       </div>

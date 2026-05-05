@@ -29,6 +29,7 @@ pub struct DbdFile {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ColumnDef {
     pub col_type: ColType,
     pub name: String,
@@ -38,6 +39,7 @@ pub struct ColumnDef {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct VersionDef {
     pub builds: Vec<BuildRange>,
     pub layouts: Vec<String>,
@@ -68,6 +70,7 @@ pub struct BuildVersion {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct EntryDef {
     pub column: String,
     pub annotations: Vec<String>,
