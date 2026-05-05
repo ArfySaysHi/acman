@@ -159,27 +159,22 @@ fn parse_column_type(input: &str) -> Result<(ColType, Option<(String, String)>),
     }
 }
 
-fn parse_column_name(input: &str) -> Result<(&str, Option<String>, bool), String> {
+fn parse_column_name(input: &str) -> Result<(String, Option<String>, bool), String> {
     let mut name_split = input.splitn(2, "//");
-
-    let mut col_name = name_split.next().ok_or("Failed to read column name")?;
+    let col_name = name_split.next().ok_or("Failed to read column name")?;
     let col_comment = name_split.next().to_owned();
     let col_unconfirmed = col_name.contains('?');
 
-    if col_unconfirmed {
-        col_name = col_name
-            .strip_suffix('?')
-            .ok_or("Failed to strip hanging ? from column name")?;
-    }
+    let col_name = if col_unconfirmed {
+        col_name.replacen("?", "", 1).trim().to_string()
+    } else {
+        col_name.trim().to_string()
+    };
 
     if let Some(comment) = col_comment {
-        Ok((
-            col_name.trim(),
-            Some(comment.trim().to_string()),
-            col_unconfirmed,
-        ))
+        Ok((col_name, Some(comment.trim().to_string()), col_unconfirmed))
     } else {
-        Ok((col_name.trim(), None, col_unconfirmed))
+        Ok((col_name, None, col_unconfirmed))
     }
 }
 
@@ -190,7 +185,7 @@ fn parse_column_def(input: &str) -> Result<ColumnDef, String> {
 
     Ok(ColumnDef {
         col_type: col_type.0,
-        name: col_name.0.to_string(),
+        name: col_name.0,
         foreign: col_type.1,
         is_confirmed: !col_name.2,
         comment: col_name.1,

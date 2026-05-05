@@ -1,6 +1,9 @@
-use crate::{mpq::extract_file::extract_file, types::structs::SharedAppState};
 use serde::Serialize;
-use wow_cdbc::{DbcParser, RecordSet, SchemaDiscoverer, Value};
+use wow_cdbc::{DbcParser, RecordSet, Value};
+
+use crate::{
+    dbc::load_dbd::load_dbd, mpq::extract_file::extract_file, types::structs::SharedAppState,
+};
 
 #[derive(Serialize)]
 pub struct DbcResponse {
@@ -26,18 +29,6 @@ fn extract_dbc_name(path: &str) -> &str {
 
 fn parse_dbc_bytes(bytes: &[u8]) -> Result<DbcParser, String> {
     DbcParser::parse_bytes(bytes).map_err(|e| format!("Failed to parse DBC: {e}"))
-}
-
-fn discover_schema<'a>(
-    parser: &'a DbcParser,
-    raw_records: &'a wow_cdbc::RecordSet,
-    dbc_name: &str,
-) -> Result<wow_cdbc::Schema, String> {
-    SchemaDiscoverer::new(parser.header(), parser.data(), raw_records.string_block())
-        .with_detect_key(true)
-        .with_validate_strings(true)
-        .generate_schema(dbc_name)
-        .map_err(|e| format!("Failed to discover schema: {e}"))
 }
 
 fn parse_records_with_schema(bytes: &[u8], schema: wow_cdbc::Schema) -> Result<RecordSet, String> {
@@ -87,8 +78,27 @@ fn build_response(record_set: RecordSet, columns: Vec<String>) -> DbcResponse {
 #[tauri::command]
 pub async fn read_dbc(
     state: tauri::State<'_, SharedAppState>,
+    app_handle: tauri::AppHandle,
     id: u32,
     path: String,
 ) -> Result<DbcResponse, String> {
-    todo!()
+    // Getting the DBC file bytes and name of the DBC to lookup the schema
+    let state = state.inner().clone();
+    let table_name = extract_dbc_name(&path);
+    let dbc_raw = extract_file(state, id, path.clone()).await?;
+
+    // Getting the schema for the given dbc name
+    let parsed_schema = load_dbd(app_handle, table_name)?;
+    let columns = parsed_schema
+        .fields
+        .iter()
+        .map(|f| f.name.clone())
+        .collect();
+
+    // Providing context to DBC columns and shipping it out
+    let dbc_records = parse_records_with_schema(&dbc_raw, parsed_schema)
+        .map_err(|e| format!("Failed to parse dbc_bytes: {e}"))?;
+    let response = build_response(dbc_records, columns);
+
+    Ok(response)
 }

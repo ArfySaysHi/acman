@@ -44,6 +44,7 @@ fn build_schema(
         patch: 0,
         build: 11792,
     };
+    let mut key_field: Option<String> = None;
 
     for entry in &version.entries {
         let col_def = dbd
@@ -52,9 +53,8 @@ fn build_schema(
             .find(|c| c.name == entry.column)
             .ok_or_else(|| format!("No column def found for: {}", entry.column))?;
 
-        // handle id annotation
         if entry.annotations.iter().any(|a| a == "id") {
-            schema.set_key_field(&entry.column);
+            key_field = Some(entry.column.clone());
         }
 
         if matches!(col_def.col_type, ColType::LocString) && build < &cata {
@@ -80,13 +80,21 @@ fn build_schema(
             Some(size) => SchemaField::new_array(&entry.column, field_type, size),
             None => SchemaField::new(&entry.column, field_type),
         };
+
         schema.add_field(field);
+    }
+
+    if let Some(key) = &key_field {
+        schema.set_key_field(key);
     }
 
     Ok(schema)
 }
 
-pub fn load_dbd(app_handle: tauri::AppHandle, table_name: String) -> Result<(), String> {
+pub fn load_dbd(app_handle: tauri::AppHandle, table_name: &str) -> Result<Schema, String> {
+    // Hardcoding this for now since I'm only targeting wotlk due to AzerothCore, could be changed
+    // easily, but I'd recommend extracting this as its own crate if you wanted to reuse it for
+    // other versions
     let wotlk_version = BuildVersion {
         major: 3,
         minor: 3,
@@ -104,16 +112,10 @@ pub fn load_dbd(app_handle: tauri::AppHandle, table_name: String) -> Result<(), 
     let version_def = dbd_file
         .definitions
         .iter()
-        .find(|v| {
-            v.builds
-                .iter()
-                .find(|x| x.contains(&wotlk_version))
-                .is_some()
-        })
+        .find(|v| v.builds.iter().any(|x| x.contains(&wotlk_version)))
         .ok_or("Failed to find a matching version definition for the provided patch")?;
 
-    let mut schema = build_schema(&dbd_file, version_def, &wotlk_version, &table_name);
-    todo!()
+    build_schema(&dbd_file, version_def, &wotlk_version, table_name)
 }
 
 #[cfg(test)]
