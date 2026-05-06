@@ -26,6 +26,7 @@ export default function Mpq() {
 
   useEffect(() => {
     if (mpq.activeMpq) {
+      setOpenDbc(null);
       mpq.setArchivePath("/");
       mpq.fetchFiles(mpq.activeMpq);
     }
