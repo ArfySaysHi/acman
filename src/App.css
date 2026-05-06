@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 /* ── Ayu Dark token definitions ─────────────────────────────────── */
 @theme {
   --color-ayu-bg:        #0d1017;
@@ -244,3 +245,6 @@ body {
   border: 1px solid var(--color-ayu-red);
   color: var(--color-ayu-red);
 }
+
+/* Finally, a fix for the white square of doom */
+::-webkit-scrollbar-corner { background: var(--color-ayu-bg); }

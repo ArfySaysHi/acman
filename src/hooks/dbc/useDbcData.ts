@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useToast } from "../../context/ToastContext";
 
 export type DbcValue = number | string;
@@ -14,6 +14,11 @@ export interface UseDbcDataProps {
   path: string;
 }
 
+export interface IndexedRow {
+  row: DbcValue[];
+  originalIdx: number;
+}
+
 export default function useDbcData({ id, path }: UseDbcDataProps) {
   const [data, setData] = useState<DbcResponse | null>(null);
   const [filter, setFilter] = useState("");
@@ -21,6 +26,7 @@ export default function useDbcData({ id, path }: UseDbcDataProps) {
   const { push } = useToast();
 
   useEffect(() => {
+    setData(null);
     setLoading(true);
     setFilter("");
 
@@ -37,5 +43,10 @@ export default function useDbcData({ id, path }: UseDbcDataProps) {
         )
       : (data?.rows ?? []);
 
-  return { data, filter, setFilter, filteredRows, loading };
+  const indexedRows = useMemo(
+    () => filteredRows.map((row): IndexedRow => ({ row, originalIdx: data!.rows.indexOf(row) })),
+    [filteredRows],
+  );
+
+  return { data, filter, setFilter, indexedRows, filteredRows, loading };
 }

@@ -1,9 +1,8 @@
 import useDbcData from "../../hooks/dbc/useDbcData";
 import useDbcEdits from "../../hooks/dbc/useDbcEdits";
 import PathHelper from "../../helpers/PathHelper";
-import { useMemo } from "react";
 import DbcTableBody from "../dbc/DbcTableBody";
-import DbcTableHead from "../dbc/DbcTableHead";
+import { useMemo, useRef } from "react";
 
 interface DbcViewerProps {
   mpqId: number;
@@ -12,37 +11,39 @@ interface DbcViewerProps {
 }
 
 export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
-  const { data, filter, setFilter, filteredRows, loading } = useDbcData({ id: mpqId, path });
-  const { pendingEdits, isDirty } = useDbcEdits();
-
-  const fileName = useMemo(() => PathHelper.pathToFileName(path), [path]);
+  const { data, filter, setFilter, indexedRows, filteredRows, loading } = useDbcData({
+    id: mpqId,
+    path,
+  });
+  const { pendingEdits, editCell, revertCell, revertAll, isDirty } = useDbcEdits();
+  const fileName = PathHelper.pathToFileName(path);
+  const colWidths = useMemo(
+    () => data?.columns.map((col) => Math.max(col.length * 8 + 24, 80)) ?? [],
+    [data?.columns],
+  );
+  const headerRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
-      className="ayu-panel flex flex-col"
-      style={{ height: "100%", minHeight: 0, overflow: "hidden" }}
+      className="ayu-panel flex flex-col overflow-hidden"
+      style={{ height: "100%", minHeight: 0 }}
     >
       <div
-        className="flex items-center gap-3 px-3 shrink-0"
-        style={{
-          height: 36,
-          borderBottom: "1px solid var(--color-ayu-border)",
-          background: "var(--color-ayu-alt)",
-        }}
+        className="flex items-center gap-3 px-3 shrink-0 border-b border-ayu-border"
+        style={{ height: 36, background: "var(--color-ayu-alt)" }}
       >
-        <span style={{ color: "var(--color-ayu-cyan)", fontSize: 10 }}>◈</span>
+        <span className="text-[10px]" style={{ color: "var(--color-ayu-cyan)" }}>
+          ◈
+        </span>
         <span
-          style={{
-            color: "var(--color-ayu-orange)",
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.05em",
-          }}
+          className="text-[11px] font-semibold tracking-wide"
+          style={{ color: "var(--color-ayu-orange)" }}
         >
           {fileName}
         </span>
+
         {data && (
-          <span style={{ color: "var(--color-ayu-dim)", fontSize: 10 }}>
+          <span className="text-[10px]" style={{ color: "var(--color-ayu-dim)" }}>
             {data.columns.length} cols · {data.rows.length} rows
             {filteredRows.length !== data.rows.length && (
               <span style={{ color: "var(--color-ayu-yellow)" }}>
@@ -51,7 +52,7 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
               </span>
             )}
             {isDirty && (
-              <span style={{ color: "var(--color-ayu-orange)", marginLeft: 6 }}>
+              <span className="ml-1.5" style={{ color: "var(--color-ayu-orange)" }}>
                 · {pendingEdits.size} unsaved {pendingEdits.size === 1 ? "edit" : "edits"}
               </span>
             )}
@@ -76,18 +77,44 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
 
       {loading && (
         <div
-          className="flex items-center justify-center flex-1"
-          style={{ color: "var(--color-ayu-dim)", fontSize: 11 }}
+          className="flex items-center justify-center flex-1 gap-2 text-[11px]"
+          style={{ color: "var(--color-ayu-dim)" }}
         >
-          <span style={{ color: "var(--color-ayu-cyan)", marginRight: 8 }}>⟳</span>
+          <span style={{ color: "var(--color-ayu-cyan)" }}>⟳</span>
           Parsing {fileName}…
         </div>
       )}
 
       {data && !loading && (
         <div className="flex flex-col flex-1 min-h-0">
-          <DbcTableHead columns={data.columns} />
-          <DbcTableBody rows={data.rows} pendingEdits={pendingEdits} />
+          <DbcTableBody
+            rows={indexedRows}
+            columns={data.columns}
+            onCellChange={editCell}
+            onCellRevert={revertCell}
+            pendingEdits={pendingEdits}
+            colWidths={colWidths}
+            headerRef={headerRef}
+          />
+        </div>
+      )}
+
+      {isDirty && (
+        <div
+          className="flex items-center gap-3 px-3 shrink-0 border-t border-ayu-border text-[10px]"
+          style={{
+            height: 36,
+            background: "color-mix(in srgb, var(--color-ayu-orange) 8%, var(--color-ayu-panel))",
+          }}
+        >
+          <span style={{ color: "var(--color-ayu-orange)" }}>◆</span>
+          <span className="flex-1" style={{ color: "var(--color-ayu-dim)" }}>
+            {pendingEdits.size} unsaved {pendingEdits.size === 1 ? "edit" : "edits"}
+          </span>
+          <button className="ayu-btn ayu-btn-ghost" onClick={revertAll}>
+            Revert all
+          </button>
+          <button className="ayu-btn ayu-btn-orange">Save</button>
         </div>
       )}
     </div>

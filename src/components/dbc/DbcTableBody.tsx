@@ -1,40 +1,92 @@
-import { DbcValue } from "../../hooks/dbc/useDbcData";
+import { useEffect, useRef, useState } from "react";
+import { IndexedRow } from "../../hooks/dbc/useDbcData";
 import { EditKey } from "../../hooks/dbc/useDbcEdits";
-import DbcRow from "./DbcRow";
+import DbcRow, { ROW_HEIGHT } from "./DbcRow";
+
+const OVERSCAN = 10;
 
 interface DbcTableBodyProps {
-  rows: DbcValue[][];
+  rows: IndexedRow[];
+  columns: string[];
+  onCellChange: (key: EditKey, value: string) => void;
+  onCellRevert: (key: EditKey) => void;
   pendingEdits: Map<EditKey, string>;
+  colWidths: number[];
+  headerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export default function DbcTableBody({ rows, pendingEdits }: DbcTableBodyProps) {
+export default function DbcTableBody({
+  rows,
+  columns,
+  onCellChange,
+  onCellRevert,
+  pendingEdits,
+  colWidths,
+  headerRef,
+}: DbcTableBodyProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setContainerHeight(el.clientHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const totalHeight = rows.length * ROW_HEIGHT;
+  const startIdx = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
+  const visibleCount = Math.ceil(containerHeight / ROW_HEIGHT) + OVERSCAN * 2;
+  const endIdx = Math.min(rows.length, startIdx + visibleCount);
+  const offsetY = startIdx * ROW_HEIGHT;
+
   return (
-    <div style={{ flex: 1, overflowY: "auto", overflowX: "auto" }}>
+    <div
+      ref={containerRef}
+      className="flex-1 overflow-auto"
+      onScroll={(e) => {
+        setScrollTop(e.currentTarget.scrollTop);
+        if (headerRef.current) headerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+      }}
+    >
+      <div
+        className="sticky top-0 z-10 flex min-w-max border-b border-ayu-border"
+        style={{ background: "var(--color-ayu-panel)" }}
+      >
+        <div className="shrink-0 border-r border-ayu-border" style={{ width: 48 }} />
+        {columns.map((col, i) => (
+          <div
+            key={i}
+            className="shrink-0 px-2.5 py-1.25 text-[10px] font-semibold uppercase tracking-widest border-r border-ayu-border overflow-hidden text-ellipsis whitespace-nowrap"
+            style={{ width: colWidths[i], color: "var(--color-ayu-orange)" }}
+            title={col}
+          >
+            {col}
+          </div>
+        ))}
+      </div>
       {rows.length === 0 ? (
-        <div
-          style={{
-            padding: "32px",
-            textAlign: "center",
-            color: "var(--color-ayu-dim)",
-            fontSize: 11,
-          }}
-        >
+        <div className="p-8 text-center text-[11px]" style={{ color: "var(--color-ayu-dim)" }}>
           No rows match the filter
         </div>
       ) : (
-        <div
-          style={{
-            position: "relative",
-            minWidth: "max-content",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-            }}
-          >
-            {rows.map((row, id: number) => {
-              return <DbcRow key={id} row={row} rowId={id} pendingEdits={pendingEdits} />;
+        <div className="relative min-w-max" style={{ height: totalHeight }}>
+          <div style={{ position: "absolute", top: offsetY, left: 0, right: 0 }}>
+            {rows.slice(startIdx, endIdx).map((indexedRow, i) => {
+              return (
+                <DbcRow
+                  key={indexedRow.originalIdx}
+                  row={indexedRow.row}
+                  rowId={indexedRow.originalIdx}
+                  isOdd={i % 2 === 1}
+                  onCellChange={onCellChange}
+                  onCellRevert={onCellRevert}
+                  pendingEdits={pendingEdits}
+                  colWidths={colWidths}
+                />
+              );
             })}
           </div>
         </div>
