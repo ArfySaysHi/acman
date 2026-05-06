@@ -9,6 +9,7 @@ pub mod list_mpqs;
 pub mod open_mpq;
 pub mod read_dbc;
 pub mod rename_dir;
+pub mod update_dbc;
 
 pub use add_files::*;
 pub use close_mpq::*;
@@ -21,3 +22,5 @@ pub use list_mpqs::*;
 pub use open_mpq::*;
 pub use read_dbc::*;
 pub use rename_dir::*;
+pub use update_dbc::*;
+

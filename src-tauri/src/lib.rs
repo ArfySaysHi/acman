@@ -84,7 +84,8 @@ pub fn run() {
             deploy_noggit_project,
             get_pipeline_steps,
             extract_files,
-            rename_dir
+            rename_dir,
+            update_dbc,
         ])
         .run(tauri::generate_context!())
         .expect("Error running Tauri");

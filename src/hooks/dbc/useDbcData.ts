@@ -48,5 +48,17 @@ export default function useDbcData({ id, path }: UseDbcDataProps) {
     [filteredRows],
   );
 
-  return { data, filter, setFilter, indexedRows, filteredRows, loading };
+  async function reload() {
+    setLoading(true);
+    try {
+      const result = await invoke<DbcResponse>("read_dbc", { id, path });
+      setData(result);
+    } catch (err) {
+      push(String(err), "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { data, filter, setFilter, indexedRows, filteredRows, loading, reload };
 }

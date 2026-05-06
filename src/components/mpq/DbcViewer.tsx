@@ -3,6 +3,8 @@ import useDbcEdits from "../../hooks/dbc/useDbcEdits";
 import PathHelper from "../../helpers/PathHelper";
 import DbcTableBody from "../dbc/DbcTableBody";
 import { useMemo, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useToast } from "../../context/ToastContext";
 
 interface DbcViewerProps {
   mpqId: number;
@@ -11,7 +13,7 @@ interface DbcViewerProps {
 }
 
 export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
-  const { data, filter, setFilter, indexedRows, filteredRows, loading } = useDbcData({
+  const { data, filter, setFilter, indexedRows, filteredRows, loading, reload } = useDbcData({
     id: mpqId,
     path,
   });
@@ -22,6 +24,22 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
     [data?.columns],
   );
   const headerRef = useRef<HTMLDivElement>(null);
+  const { push } = useToast();
+
+  async function saveDbcChanges() {
+    try {
+      const edits = Array.from(pendingEdits.entries()).map(([key, value]) => {
+        const [row, col] = key.split(":").map(Number);
+        return { row, col, value };
+      });
+      await invoke("update_dbc", { id: mpqId, archivePath: path, edits });
+      revertAll();
+      reload();
+    } catch (err) {
+      push(`Failed to save Dbc changes: ${err}`, "error");
+      console.error(err);
+    }
+  }
 
   return (
     <div
@@ -114,7 +132,9 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
           <button className="ayu-btn ayu-btn-ghost" onClick={revertAll}>
             Revert all
           </button>
-          <button className="ayu-btn ayu-btn-orange">Save</button>
+          <button onClick={saveDbcChanges} className="ayu-btn ayu-btn-orange">
+            Save
+          </button>
         </div>
       )}
     </div>

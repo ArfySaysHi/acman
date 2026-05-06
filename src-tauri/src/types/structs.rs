@@ -116,3 +116,10 @@ impl From<wow_mpq::FileEntry> for FileEntry {
         }
     }
 }
+
+#[derive(Deserialize)]
+pub struct DbcEdit {
+    pub row: usize,
+    pub col: usize,
+    pub value: String,
+}
