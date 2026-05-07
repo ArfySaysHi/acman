@@ -9,8 +9,7 @@ pub async fn add_files(
     paths: Vec<PathBuf>,
     archive_paths: Vec<String>,
 ) -> Result<(), String> {
-    let path_len = paths.len().clone();
-    // Read files on blocking thread
+    let path_len = paths.len();
     let temps = tokio::task::spawn_blocking(move || {
         paths
             .iter()
@@ -29,14 +28,12 @@ pub async fn add_files(
     .await
     .map_err(|e| format!("spawn_blocking failed: {e}"))??;
 
-    // Clone the Arc before spawn_blocking so we can move it in
     let instance_mutex = {
         let guard = state.mpqs.read().await;
         guard.get(&id).cloned().ok_or("Failed to get MPQInstance")?
     };
 
     println!("add_files called, id={}, file_count={}", id, path_len);
-    // Do ALL MPQ work — lock, loop, flush, reopen — on a blocking thread
     tokio::task::spawn_blocking(move || {
         println!("spawn_blocking entered");
         let mut instance = instance_mutex.blocking_lock();
