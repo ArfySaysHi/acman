@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { IndexedRow } from "../../hooks/dbc/useDbcData";
 import { EditKey } from "../../hooks/dbc/useDbcEdits";
 import DbcRow, { ROW_HEIGHT } from "./DbcRow";
+import useDbcCellFocus from "../../hooks/dbc/useDbcCellFocus";
 
 const OVERSCAN = 10;
 
@@ -27,6 +28,11 @@ export default function DbcTableBody({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
+
+  const { focusedCell, moveTab } = useDbcCellFocus({
+    rows,
+    colCount: columns.length,
+  });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -85,6 +91,11 @@ export default function DbcTableBody({
                   onCellRevert={onCellRevert}
                   pendingEdits={pendingEdits}
                   colWidths={colWidths}
+                  focusedCell={focusedCell}
+                  onTab={(key: EditKey, draft: string, forward: boolean, valueChanged: boolean) => {
+                    if (valueChanged) onCellChange(key, draft);
+                    moveTab(key, forward);
+                  }}
                 />
               );
             })}

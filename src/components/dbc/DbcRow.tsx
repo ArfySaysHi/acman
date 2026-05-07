@@ -13,6 +13,8 @@ interface DbcRowProps {
   onCellRevert: (key: EditKey) => void;
   pendingEdits: Map<EditKey, string>;
   colWidths: number[];
+  focusedCell: EditKey | null;
+  onTab: (key: EditKey, draft: string, forward: boolean, valueChanged: boolean) => void;
 }
 
 export default function DbcRow({
@@ -23,6 +25,8 @@ export default function DbcRow({
   onCellRevert,
   pendingEdits,
   colWidths,
+  focusedCell,
+  onTab,
 }: DbcRowProps) {
   // This is different as it has to check without knowledge of the column
   const isDirty = row.some((_, ci) => pendingEdits.has(DbcHelper.editKey(rowId, ci)));
@@ -51,6 +55,8 @@ export default function DbcRow({
 
       {row.map((cell, colId) => {
         const key = DbcHelper.editKey(rowId, colId);
+        const isFocused = focusedCell === key;
+
         return (
           <DbcCell
             key={colId}
@@ -60,6 +66,8 @@ export default function DbcRow({
             onCommit={onCellChange}
             onRevert={onCellRevert}
             width={colWidths[colId]}
+            isFocused={isFocused}
+            onTab={onTab}
           />
         );
       })}

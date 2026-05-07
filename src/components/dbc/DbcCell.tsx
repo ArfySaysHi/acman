@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DbcValue } from "../../hooks/dbc/useDbcData";
 import { EditKey } from "../../hooks/dbc/useDbcEdits";
 
@@ -9,6 +9,8 @@ interface DbcCellProps {
   onCommit: (key: EditKey, value: string) => void;
   onRevert: (key: EditKey) => void;
   width: number;
+  isFocused: boolean;
+  onTab: (key: EditKey, draft: string, forward: boolean, valueChanged: boolean) => void;
 }
 
 export default function DbcCell({
@@ -18,6 +20,8 @@ export default function DbcCell({
   onCommit,
   onRevert,
   width,
+  isFocused,
+  onTab,
 }: DbcCellProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -25,14 +29,21 @@ export default function DbcCell({
   const displayed = String(value === "" ? "-" : value);
   const isNum = typeof value === "number";
 
+  useEffect(() => {
+    if (isFocused) {
+      setDraft(String(value));
+      setIsEditing(true);
+    }
+  }, [isFocused]);
+
   function beginEdit() {
-    setDraft(displayed);
+    setDraft(String(value));
     setIsEditing(true);
   }
 
   function commit() {
     setIsEditing(false);
-    onCommit(editKey, draft);
+    if (draft !== String(value)) onCommit(editKey, draft);
   }
 
   function cancel() {
@@ -48,11 +59,15 @@ export default function DbcCell({
         <input
           autoFocus
           className="w-full h-full bg-transparent border-none outline-none px-2.5 text-[11px] text-ayu-fg font-mono tabular-nums"
+          onBlur={cancel}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === "Tab") {
+            if (e.key === "Tab") {
+              e.preventDefault();
+              onTab(editKey, draft, !e.shiftKey, String(value) !== draft);
+            }
+            if (e.key === "Enter") {
               e.preventDefault();
               commit();
             }
@@ -77,7 +92,7 @@ export default function DbcCell({
             ? "var(--color-ayu-cyan)"
             : "var(--color-ayu-fg)",
       }}
-      onClick={beginEdit}
+      onDoubleClick={beginEdit}
       onContextMenu={(e) => {
         e.preventDefault();
         onRevert(editKey);
