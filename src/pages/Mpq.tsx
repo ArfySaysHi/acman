@@ -92,6 +92,11 @@ export default function Mpq() {
       .catch(() => {});
   };
 
+  const handleClose = async (k: string) => {
+    setOpenDbc(null);
+    mpq.closeMpq(k);
+  };
+
   return (
     <div className="flex flex-col h-full">
       {modal === "mkdir" && (
@@ -147,7 +152,7 @@ export default function Mpq() {
                 className={`ayu-btn ${mpq.activeMpq === k ? "ayu-btn-orange" : "ayu-btn-ghost"} mr-1`}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  e.button === 2 ? mpq.closeMpq(k) : mpq.setActiveMpq(k);
+                  e.button === 2 ? handleClose(k) : mpq.setActiveMpq(k);
                 }}
               >
                 {mpq.mpqs[k].name}

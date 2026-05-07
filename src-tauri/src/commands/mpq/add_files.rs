@@ -9,41 +9,57 @@ pub async fn add_files(
     paths: Vec<PathBuf>,
     archive_paths: Vec<String>,
 ) -> Result<(), String> {
-    let preloaded_files: Vec<(Vec<u8>, String)> = paths
-        .iter()
-        .zip(archive_paths)
-        .map(|(path, archive_path)| {
-            std::fs::read(path)
-                .map(|bytes| (bytes, archive_path))
-                .map_err(|e| format!("Failed to read file {}: {e}", path.display()))
-        })
-        .collect::<Result<_, _>>()?;
+    let path_len = paths.len().clone();
+    // Read files on blocking thread
+    let temps = tokio::task::spawn_blocking(move || {
+        paths
+            .iter()
+            .zip(archive_paths)
+            .map(|(path, archive_path)| {
+                let bytes = std::fs::read(path)
+                    .map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
+                let mut tmp = tempfile::NamedTempFile::new()
+                    .map_err(|e| format!("Failed to create temp file: {e}"))?;
+                std::io::Write::write_all(&mut tmp, &bytes)
+                    .map_err(|e| format!("Failed to write temp file: {e}"))?;
+                Ok::<_, String>((tmp, archive_path))
+            })
+            .collect::<Result<Vec<_>, _>>()
+    })
+    .await
+    .map_err(|e| format!("spawn_blocking failed: {e}"))??;
 
+    // Clone the Arc before spawn_blocking so we can move it in
     let instance_mutex = {
         let guard = state.mpqs.read().await;
         guard.get(&id).cloned().ok_or("Failed to get MPQInstance")?
     };
-    let mut instance = instance_mutex.lock().await;
 
-    for (bytes, archive_path) in preloaded_files {
-        let mut tmp = tempfile::NamedTempFile::new()
-            .map_err(|e| format!("Failed to create temp file: {e}"))?;
-        std::io::Write::write_all(&mut tmp, &bytes)
-            .map_err(|e| format!("Failed to write temp file: {e}"))?;
+    println!("add_files called, id={}, file_count={}", id, path_len);
+    // Do ALL MPQ work — lock, loop, flush, reopen — on a blocking thread
+    tokio::task::spawn_blocking(move || {
+        println!("spawn_blocking entered");
+        let mut instance = instance_mutex.blocking_lock();
+        println!("lock acquired");
+        for (i, (tmp, archive_path)) in temps.iter().enumerate() {
+            println!("adding file {}/{}: {}", i + 1, temps.len(), archive_path);
+            instance
+                .archive
+                .add_file(tmp.path(), archive_path, Default::default())
+                .map_err(|e| format!("Failed to add file to MPQ: {e}"))?;
+        }
+        println!("all files added, flushing");
+
         instance
             .archive
-            .add_file(tmp.path(), &archive_path, Default::default())
-            .map_err(|e| format!("Failed to add file to MPQ: {e}"))?;
-    }
+            .flush()
+            .map_err(|e| format!("Failed to flush: {e}"))?;
 
-    instance
-        .archive
-        .flush()
-        .map_err(|e| format!("Failed to flush files to disc: {e}"))?;
+        instance.archive = MutableArchive::open(&instance.path)
+            .map_err(|e| format!("Failed to reopen archive: {e}"))?;
 
-    let archive_path_buf = instance.path.clone();
-    instance.archive = MutableArchive::open(&archive_path_buf)
-        .map_err(|e| format!("Failed to reopen archive after write: {e}"))?;
-
-    Ok(())
+        Ok::<_, String>(())
+    })
+    .await
+    .map_err(|e| format!("spawn_blocking failed: {e}"))?
 }

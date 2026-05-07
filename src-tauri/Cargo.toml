@@ -22,17 +22,16 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-bollard = "0.20.2"
+bollard = "0.21.0"
 tokio = "1.50.0"
 futures-util = "0.3.32"
 regex = "1.12.3"
 tauri-plugin-dialog = "2"
-wow-mpq = "0.6.4"
-wow-cdbc = { version = "0.6", features = ["serde"] }
+wow-cdbc = { git = "https://github.com/ArfySaysHi/warcraft-rs", package = "wow-cdbc" }
 async-trait = "0.1.89"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
 tar = "0.4.45"
 bytes = "1.11.1"
 tempfile = "3.27.0"
-
+wow-mpq = { git = "https://github.com/ArfySaysHi/warcraft-rs", package = "wow-mpq" }

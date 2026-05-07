@@ -2,7 +2,7 @@ use crate::{mpq::open_mpq, types::structs::SharedAppState};
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 use tokio::sync::oneshot;
-use wow_mpq::ArchiveBuilder;
+use wow_mpq::MutableArchive;
 
 #[tauri::command]
 pub async fn create_mpq(
@@ -10,7 +10,6 @@ pub async fn create_mpq(
     app: AppHandle,
 ) -> Result<u32, String> {
     let state = state.inner().clone();
-
     let (tx, rx) = oneshot::channel::<Result<u32, String>>();
 
     app.dialog()
@@ -22,13 +21,14 @@ pub async fn create_mpq(
                 let _ = tx.send(Err("No file path selected".to_string()));
                 return;
             };
-
             let file_path = path.to_string();
             let state = state.clone();
 
             tauri::async_runtime::spawn(async move {
-                if let Err(e) = ArchiveBuilder::new().build(&file_path) {
-                    let _ = tx.send(Err(format!("Failed to create MPQ: {e}")));
+                if let Err(e) = MutableArchive::create(&file_path, 1024)
+                    .map_err(|e| format!("Failed to create MPQ: {e}"))
+                {
+                    let _ = tx.send(Err(e));
                     return;
                 }
 
