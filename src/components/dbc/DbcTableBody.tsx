@@ -80,13 +80,13 @@ export default function DbcTableBody({
       ) : (
         <div className="relative min-w-max" style={{ height: totalHeight }}>
           <div style={{ position: "absolute", top: offsetY, left: 0, right: 0 }}>
-            {rows.slice(startIdx, endIdx).map((indexedRow, i) => {
+            {rows.slice(startIdx, endIdx).map((indexedRow) => {
               return (
                 <DbcRow
                   key={indexedRow.originalIdx}
                   row={indexedRow.row}
                   rowId={indexedRow.originalIdx}
-                  isOdd={i % 2 === 1}
+                  isOdd={indexedRow.originalIdx % 2 === 1}
                   onCellChange={onCellChange}
                   onCellRevert={onCellRevert}
                   pendingEdits={pendingEdits}

@@ -1,3 +1,4 @@
+import { Group, Panel, Separator } from "react-resizable-panels";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { ViewEntry } from "../types/types";
@@ -164,37 +165,60 @@ export default function Mpq() {
         </div>
       </div>
 
-      <div className="flex flex-col min-h-0 gap-3">
-        {openDbc && mpq.activeMpq && (
-          <div style={{ flex: "1 1 60%", minHeight: 0 }}>
-            <DbcViewer
-              mpqId={Number(mpq.activeMpq)}
-              path={openDbc}
-              onClose={() => setOpenDbc(null)}
+      <div className="flex flex-col min-h-0 flex-1">
+        {openDbc && mpq.activeMpq ? (
+          <Group orientation="vertical" className="flex flex-col h-full">
+            <Panel defaultSize={55} minSize={20} className="min-h-0 overflow-hidden">
+              <FileExplorer
+                data={visibleEntries}
+                selected={selected}
+                loading={mpq.loading}
+                path={mpq.archivePath}
+                onDirClick={(val: string) => navigate(val)}
+                onCrumbClick={(val: number) => navigateTo(val)}
+                onCreateDirClick={() => setModal("mkdir")}
+                onRenameDirClick={() => setModal("rename")}
+                onExtractClick={handleExtract}
+                onRowClick={selectRow}
+                onDoubleClick={(entry: ViewEntry) => {
+                  if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
+                    const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
+                    setOpenDbc(fullPath);
+                  }
+                }}
+              />
+            </Panel>
+            <Separator className="h-1.5 shrink-0 bg-ayu-border hover:bg-ayu-cyan cursor-row-resize transition-colors" />
+            <Panel defaultSize={45} minSize={15} className="min-h-0 overflow-hidden">
+              <DbcViewer
+                mpqId={Number(mpq.activeMpq)}
+                path={openDbc}
+                onClose={() => setOpenDbc(null)}
+              />
+            </Panel>
+          </Group>
+        ) : (
+          <div className="flex flex-col min-h-0">
+            <FileExplorer
+              data={visibleEntries}
+              selected={selected}
+              loading={mpq.loading}
+              path={mpq.archivePath}
+              onDirClick={(val: string) => navigate(val)}
+              onCrumbClick={(val: number) => navigateTo(val)}
+              onCreateDirClick={() => setModal("mkdir")}
+              onRenameDirClick={() => setModal("rename")}
+              onExtractClick={handleExtract}
+              onRowClick={selectRow}
+              onDoubleClick={(entry: ViewEntry) => {
+                if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
+                  const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
+                  setOpenDbc(fullPath);
+                }
+              }}
             />
           </div>
         )}
-
-        <div className="flex flex-col min-h-0">
-          <FileExplorer
-            data={visibleEntries}
-            selected={selected}
-            loading={mpq.loading}
-            path={mpq.archivePath}
-            onDirClick={(val: string) => navigate(val)}
-            onCrumbClick={(val: number) => navigateTo(val)}
-            onCreateDirClick={() => setModal("mkdir")}
-            onRenameDirClick={() => setModal("rename")}
-            onExtractClick={handleExtract}
-            onRowClick={selectRow}
-            onDoubleClick={(entry: ViewEntry) => {
-              if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
-                const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
-                setOpenDbc(fullPath);
-              }
-            }}
-          />
-        </div>
       </div>
     </div>
   );
