@@ -22,9 +22,8 @@ export default function useMpqRegistry({ setArchivePath, setFileCache }: UseMpqR
       const data = ZMpqMetadataMap.parse(res);
       setMpqs(data);
 
-      if (!activeMpq && Object.keys(data).length > 0)
-        setActiveMpq((prev) => {
-          if (prev) return prev;
+      if (Object.keys(data).length > 0)
+        setActiveMpq(() => {
           const keys = Object.keys(data);
           return keys.length > 0 ? keys[0] : null;
         });
@@ -32,6 +31,8 @@ export default function useMpqRegistry({ setArchivePath, setFileCache }: UseMpqR
       push(`Failed to refresh MPQs: ${err}`, "error");
       return {};
     }
+
+    return {};
   };
 
   const createMpq = async () => {
@@ -49,7 +50,7 @@ export default function useMpqRegistry({ setArchivePath, setFileCache }: UseMpqR
     try {
       const id = await invoke("open_mpq", { path });
       setActiveMpq(`${id}`);
-      return refresh();
+      await refresh();
     } catch (err) {
       push(`Failed to open MPQ: ${err}`, "error");
     }
@@ -81,11 +82,7 @@ export default function useMpqRegistry({ setArchivePath, setFileCache }: UseMpqR
         return next;
       });
 
-      const data = await refresh();
-      if (!data) throw Error("No data from refresh.");
-
-      const keys = Object.keys(data);
-      setActiveMpq(keys[keys.length - 1] ?? null);
+      await refresh();
       setArchivePath(ROOT_PATH);
     } catch (err) {
       push(`Failed to close MPQ: ${err}`, "error");

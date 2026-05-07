@@ -17,6 +17,7 @@ pub struct AppState {
     pub next_mpq_id: AtomicU32,
 }
 
+#[derive(Debug)]
 pub struct MpqInstance {
     pub archive: MutableArchive,
     pub path: PathBuf,
