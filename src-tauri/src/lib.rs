@@ -38,12 +38,7 @@ pub fn run() {
         attached: false,
     });
 
-    let settings = Mutex::new(Settings {
-        client_path: None,
-        output_path: None,
-        noggit_projects_path: None,
-        server_path: None,
-    });
+    let settings = Mutex::new(Settings::default());
 
     let state = Arc::new(AppState {
         docker,
@@ -77,7 +72,6 @@ pub fn run() {
             list_mpqs,
             add_files,
             create_mpq,
-            delete_file,
             delete_files,
             read_dbc,
             get_noggit_projects,

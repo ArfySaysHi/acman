@@ -71,7 +71,7 @@ fn record_byte_offset(
 }
 
 fn apply_numeric_edits(
-    dbc_raw: &mut Vec<u8>,
+    dbc_raw: &mut [u8],
     edits: &[DbcEdit],
     fields: &[wow_cdbc::SchemaField],
     record_size: usize,

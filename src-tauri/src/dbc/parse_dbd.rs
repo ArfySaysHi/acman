@@ -22,6 +22,44 @@ impl TryFrom<&str> for ColType {
     }
 }
 
+enum LineKind {
+    Blank,
+    Build,
+    Layout,
+    Entry,
+    Comment,
+    ColumnDef,
+    Columns,
+}
+
+impl From<&str> for LineKind {
+    fn from(line: &str) -> Self {
+        if line.is_empty() {
+            return Self::Blank;
+        }
+        if line.starts_with("BUILD ") {
+            return Self::Build;
+        }
+        if line.starts_with("LAYOUT ") {
+            return Self::Layout;
+        }
+        if line.starts_with("COMMENT ") {
+            return Self::Comment;
+        }
+        if line.starts_with("COLUMNS") {
+            return Self::Columns;
+        }
+        if ["int ", "uint ", "float ", "string ", "locstring "]
+            .iter()
+            .any(|p| line.starts_with(p))
+        {
+            Self::ColumnDef
+        } else {
+            Self::Entry
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct DbdFile {
     pub columns: Vec<ColumnDef>,
@@ -322,27 +360,6 @@ fn parse_entry_def(input: &str) -> Result<EntryDef, String> {
     })
 }
 
-fn line_type(line: &str) -> &str {
-    if line.is_empty() {
-        "blank"
-    } else if line.starts_with("BUILD ") {
-        "build"
-    } else if line.starts_with("LAYOUT ") {
-        "layout"
-    } else if line.starts_with("COMMENT ") {
-        "comment"
-    } else if line.starts_with("COLUMNS") {
-        "columns"
-    } else if ["int ", "uint ", "float ", "string ", "locstring "]
-        .iter()
-        .any(|p| line.starts_with(p))
-    {
-        "columndef"
-    } else {
-        "entry"
-    }
-}
-
 fn parse_column_block<'a, I>(lines: &mut std::iter::Peekable<I>) -> Result<Vec<ColumnDef>, String>
 where
     I: Iterator<Item = &'a str>,
@@ -376,18 +393,14 @@ where
     let mut entries: Vec<EntryDef> = vec![];
 
     while let Some(&line) = lines.peek() {
-        let line_category = line_type(line);
-        if line_category == "blank" {
-            lines.next();
-            break;
-        }
+        let line_category = LineKind::from(line);
 
         match line_category {
-            "build" => {
+            LineKind::Build => {
                 builds.extend(parse_build_line(line)?);
                 lines.next();
             }
-            "layout" => {
+            LineKind::Layout => {
                 layouts.extend(
                     line.strip_prefix("LAYOUT ")
                         .ok_or("Failed to strip prefix from LAYOUT")?
@@ -396,9 +409,13 @@ where
                 );
                 lines.next();
             }
-            "entry" => {
+            LineKind::Entry => {
                 entries.push(parse_entry_def(line)?);
                 lines.next();
+            }
+            LineKind::Blank => {
+                lines.next();
+                break;
             }
             _ => break,
         }
