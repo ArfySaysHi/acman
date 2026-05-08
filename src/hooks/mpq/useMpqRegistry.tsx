@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { ZMpqMetadataMap } from "../../types";
-import type { FileEntry, MpqMetadataMap } from "../../types";
+import { ZMpqMetadataMap, FileEntry, MpqMetadataMap } from "../../types";
 import { useState, Dispatch, SetStateAction } from "react";
 import { useToast } from "../../context/ToastContext";
 
