@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { editKey, displayValue } from "../../helpers/dbcHelper";
 import { DbcValue } from "../../hooks/dbc/useDbcData";
 import { EditKey } from "../../hooks/dbc/useDbcEdits";
@@ -17,7 +18,7 @@ interface DbcRowProps {
   onTab: (key: EditKey, draft: string, forward: boolean, valueChanged: boolean) => void;
 }
 
-export default function DbcRow({
+export function DbcRow({
   row,
   rowId,
   isOdd,
@@ -28,7 +29,6 @@ export default function DbcRow({
   focusedCell,
   onTab,
 }: DbcRowProps) {
-  // This is different as it has to check without knowledge of the column
   const isDirty = row.some((_, ci) => pendingEdits.has(editKey(rowId, ci)));
 
   return (
@@ -74,3 +74,5 @@ export default function DbcRow({
     </div>
   );
 }
+
+export default memo(DbcRow);

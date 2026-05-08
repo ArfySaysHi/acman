@@ -2,7 +2,7 @@ import useDbcData from "../../hooks/dbc/useDbcData";
 import useDbcEdits from "../../hooks/dbc/useDbcEdits";
 import { pathToFileName } from "../../helpers/pathHelper";
 import DbcTableBody from "../dbc/DbcTableBody";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "../../context/ToastContext";
 
@@ -19,10 +19,25 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
   });
   const { pendingEdits, editCell, revertCell, revertAll, isDirty } = useDbcEdits();
   const fileName = pathToFileName(path);
-  const colWidths = useMemo(
+  const initialWidths = useMemo(
     () => data?.columns.map((col) => Math.max(col.length * 8 + 24, 80)) ?? [],
     [data?.columns],
   );
+
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
+  useEffect(() => {
+    setColWidths(initialWidths);
+  }, [initialWidths]);
+
+  const resizeColumn = (i: number, width: number) => {
+    setColWidths((prev) => {
+      const next = [...prev];
+      next[i] = Math.max(width, 80);
+      return next;
+    });
+  };
+
   const headerRef = useRef<HTMLDivElement>(null);
   const { push } = useToast();
 
@@ -113,6 +128,7 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
             pendingEdits={pendingEdits}
             colWidths={colWidths}
             headerRef={headerRef}
+            onResizeColumn={resizeColumn}
           />
         </div>
       )}

@@ -14,6 +14,7 @@ interface DbcTableBodyProps {
   pendingEdits: Map<EditKey, string>;
   colWidths: number[];
   headerRef: React.RefObject<HTMLDivElement | null>;
+  onResizeColumn: (i: number, width: number) => void;
 }
 
 export default function DbcTableBody({
@@ -24,6 +25,7 @@ export default function DbcTableBody({
   pendingEdits,
   colWidths,
   headerRef,
+  onResizeColumn,
 }: DbcTableBodyProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -65,11 +67,43 @@ export default function DbcTableBody({
         {columns.map((col, i) => (
           <div
             key={i}
-            className="shrink-0 px-2.5 py-1.25 text-[10px] font-semibold uppercase tracking-widest border-r border-ayu-border overflow-hidden text-ellipsis whitespace-nowrap"
-            style={{ width: colWidths[i], color: "var(--color-ayu-orange)" }}
-            title={col}
+            className="relative shrink-0 border-r border-ayu-border"
+            style={{ width: colWidths[i] }}
           >
-            {col}
+            <div
+              className="px-2.5 py-1.25 text-[10px] font-semibold uppercase tracking-widest overflow-hidden text-ellipsis whitespace-nowrap"
+              style={{ color: "var(--color-ayu-orange)" }}
+              title={col}
+            >
+              {col}
+            </div>
+
+            <div
+              className="absolute top-0 right-0 h-full w-1 cursor-col-resize"
+              onPointerDown={(e) => {
+                e.preventDefault();
+
+                const startX = e.clientX;
+                const startWidth = colWidths[i];
+
+                const onMove = (ev: PointerEvent) => {
+                  const delta = ev.clientX - startX;
+                  onResizeColumn(i, startWidth + delta);
+                };
+
+                const onUp = () => {
+                  window.removeEventListener("pointermove", onMove);
+                  window.removeEventListener("pointerup", onUp);
+
+                  document.body.style.userSelect = "";
+                };
+
+                document.body.style.userSelect = "none";
+
+                window.addEventListener("pointermove", onMove);
+                window.addEventListener("pointerup", onUp);
+              }}
+            />
           </div>
         ))}
       </div>
