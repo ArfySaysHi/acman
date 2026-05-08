@@ -1,15 +1,10 @@
 use crate::{
     dbc::load_dbd::load_dbd,
     mpq::extract_file,
-    types::structs::{DbcEdit, MpqInstance, SharedAppState},
+    types::structs::{DbcEdit, SharedAppState},
 };
-use std::{
-    path::{Path, PathBuf},
-    sync::Arc,
-};
-use tokio::sync::Mutex;
+use std::path::{Path, PathBuf};
 use wow_cdbc::{DbcParser, FieldType};
-use wow_mpq::MutableArchive;
 
 const DBC_HEADER_SIZE: usize = 20;
 const STRING_BLOCK_SIZE_OFFSET: usize = 16;
@@ -192,46 +187,7 @@ async fn write_to_mpq(
         .add_file_data(data, &archive_path.to_string_lossy(), Default::default())
         .map_err(|e| format!("Failed to write file to MPQ: {e}"))?;
 
-    instance
-        .archive
-        .flush()
-        .map_err(|e| format!("Failed to flush MPQ: {e}"))?;
-
-    drop(instance);
-    drop(instance_guard);
-
-    reopen_mpq(state, id).await
-}
-
-async fn reopen_mpq(state: &SharedAppState, id: u32) -> Result<(), String> {
-    let path = {
-        let guard = state.mpqs.read().await;
-        let instance = guard.get(&id).ok_or("Failed to find MPQ instance")?;
-        let mpq = instance.lock().await;
-        mpq.path.clone()
-    };
-
-    let name = path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .ok_or("Unknown filename")?
-        .to_string();
-
-    let archive = MutableArchive::open(&path).map_err(|e| e.to_string())?;
-
-    {
-        let mut mpqs = state.mpqs.write().await;
-        mpqs.insert(
-            id,
-            Arc::new(Mutex::new(MpqInstance {
-                archive,
-                path,
-                name,
-            })),
-        );
-    }
-
-    Ok(())
+    instance.flush_and_reopen()
 }
 
 fn value_to_bytes(s: &str, field_type: FieldType) -> Result<Vec<u8>, String> {

@@ -1,6 +1,5 @@
 use crate::types::structs::SharedAppState;
 use tauri::State;
-use wow_mpq::MutableArchive;
 
 #[tauri::command]
 pub async fn rename_dir(
@@ -38,14 +37,5 @@ pub async fn rename_dir(
             .map_err(|e| format!("Failed to rename {old_name}: {e}"))?;
     }
 
-    instance
-        .archive
-        .flush()
-        .map_err(|e| format!("Failed to flush files to disc: {e}"))?;
-
-    let archive_path_buf = instance.path.clone();
-    instance.archive = MutableArchive::open(&archive_path_buf)
-        .map_err(|e| format!("Failed to reopen archive after write: {e}"))?;
-
-    Ok(())
+    instance.flush_and_reopen()
 }

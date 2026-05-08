@@ -1,3 +1,4 @@
+use crate::helpers::dbc::dbc_name_map;
 use serde::Serialize;
 use wow_cdbc::{DbcParser, RecordSet, Value};
 
@@ -82,13 +83,21 @@ pub async fn read_dbc(
     id: u32,
     path: String,
 ) -> Result<DbcResponse, String> {
-    // Getting the DBC file bytes and name of the DBC to lookup the schema
     let state = state.inner().clone();
-    let table_name = extract_dbc_name(&path);
+    let file_name = extract_dbc_name(&path);
+    let name_map = dbc_name_map();
+    let table_name = name_map.get(&file_name);
+
     let dbc_raw = extract_file(state, id, path.clone()).await?;
 
     // Getting the schema for the given dbc name
-    let parsed_schema = load_dbd(app_handle, table_name)?;
+    let parsed_schema = {
+        if let Some(name) = &table_name {
+            load_dbd(app_handle, name)?
+        } else {
+            load_dbd(app_handle, file_name)?
+        }
+    };
     let columns = parsed_schema
         .fields
         .iter()

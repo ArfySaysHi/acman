@@ -24,6 +24,15 @@ pub struct MpqInstance {
     pub name: String,
 }
 
+impl MpqInstance {
+    pub fn flush_and_reopen(&mut self) -> Result<(), String> {
+        self.archive.flush().map_err(|e| e.to_string())?;
+        self.archive = MutableArchive::open(&self.path).map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MpqMetadata {
     pub path: PathBuf,

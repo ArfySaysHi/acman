@@ -19,10 +19,5 @@ pub async fn delete_files(
             .map_err(|e| format!("Failed to delete file '{path}': {e}"))?;
     }
 
-    instance.archive.flush().map_err(|e| e.to_string())?;
-
-    let path_buf = instance.path.clone();
-    instance.archive = wow_mpq::MutableArchive::open(&path_buf).map_err(|e| e.to_string())?;
-
-    Ok(())
+    instance.flush_and_reopen()
 }

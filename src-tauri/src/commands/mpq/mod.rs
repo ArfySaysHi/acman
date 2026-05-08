@@ -1,7 +1,6 @@
 pub mod add_files;
 pub mod close_mpq;
 pub mod create_mpq;
-pub mod delete_file;
 pub mod delete_files;
 pub mod extract_files;
 pub mod list_files;
@@ -14,7 +13,6 @@ pub mod update_dbc;
 pub use add_files::*;
 pub use close_mpq::*;
 pub use create_mpq::*;
-pub use delete_file::*;
 pub use delete_files::*;
 pub use extract_files::*;
 pub use list_files::*;
@@ -23,4 +21,3 @@ pub use open_mpq::*;
 pub use read_dbc::*;
 pub use rename_dir::*;
 pub use update_dbc::*;
-

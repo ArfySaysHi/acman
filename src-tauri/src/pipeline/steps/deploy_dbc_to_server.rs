@@ -1,5 +1,5 @@
 use crate::{
-    helpers::docker::dbc_name_map,
+    helpers::dbc::dbc_name_map,
     pipeline::{context::DeployContext, step::DeployStep},
 };
 use async_trait::async_trait;

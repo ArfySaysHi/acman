@@ -1,6 +1,5 @@
 use crate::types::structs::SharedAppState;
 use std::path::PathBuf;
-use wow_mpq::MutableArchive;
 
 #[tauri::command]
 pub async fn add_files(
@@ -47,15 +46,7 @@ pub async fn add_files(
         }
         println!("all files added, flushing");
 
-        instance
-            .archive
-            .flush()
-            .map_err(|e| format!("Failed to flush: {e}"))?;
-
-        instance.archive = MutableArchive::open(&instance.path)
-            .map_err(|e| format!("Failed to reopen archive: {e}"))?;
-
-        Ok::<_, String>(())
+        instance.flush_and_reopen()
     })
     .await
     .map_err(|e| format!("spawn_blocking failed: {e}"))?
