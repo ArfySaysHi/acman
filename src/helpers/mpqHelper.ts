@@ -1,4 +1,18 @@
+import { PushFn } from "../context/ToastContext";
 import { FileEntry, ViewEntry } from "../types/types";
+
+export function requireNumericId(id: string | null, push: PushFn) {
+  if (!id) {
+    push("No MPQ open", "error");
+    return null;
+  }
+  const n = Number(id);
+  if (Number.isNaN(n)) {
+    push(`Invalid MPQ id: ${id}`, "error");
+    return null;
+  }
+  return n;
+}
 
 export function toPrefix(path: string): string {
   return path === "/" ? "" : path.replace(/^\//, "").replace(/\//g, "\\") + "\\";

@@ -7,6 +7,7 @@ import {
   mergeFiles,
   pathsToMpqFiles,
   pathToMpqFile,
+  requireNumericId,
   windowsify,
 } from "../../helpers/mpqHelper";
 import { invoke } from "@tauri-apps/api/core";
@@ -37,13 +38,13 @@ export default function useMpqFileCache({ activeMpqRef }: UseMpqFileCacheProps) 
   };
 
   const fetchFiles = async (id: string, force = false) => {
-    const numericId = Number(id);
-    if (Number.isNaN(numericId)) return push(`Invalid MPQ id: ${id}`, "error");
+    const numericId = requireNumericId(id, push);
+    if (numericId === null) return;
     if (!force && fileCache[id]) return;
 
     setLoading(true);
     try {
-      const res = await invoke("list_files", { id: Number(id) });
+      const res = await invoke("list_files", { id: numericId });
       setFileCache((prev) => ({ ...prev, [id]: res as FileEntry[] }));
     } catch (err) {
       push(`Failed to list files: ${err}`, "error");
@@ -55,6 +56,8 @@ export default function useMpqFileCache({ activeMpqRef }: UseMpqFileCacheProps) 
   const addFiles = async (paths: string[]) => {
     const id = getId();
     if (!id) return;
+    const numericId = requireNumericId(id, push);
+    if (numericId === null) return;
 
     const filePaths = paths.map((p) => toArchivePath(archivePath, getNameFromPath(p).trim()));
     const optimisticFiles: FileEntry[] = pathsToMpqFiles(filePaths);
@@ -65,7 +68,7 @@ export default function useMpqFileCache({ activeMpqRef }: UseMpqFileCacheProps) 
     }));
 
     await invoke("add_files", {
-      id: Number(id),
+      id: numericId,
       paths,
       archivePaths: filePaths,
     }).catch((err) => {
@@ -85,8 +88,8 @@ export default function useMpqFileCache({ activeMpqRef }: UseMpqFileCacheProps) 
   const extractFiles = async (selected: ViewEntry[], path: string) => {
     const id = getId();
     if (!id) return;
-    const numericId = Number(id);
-    if (Number.isNaN(numericId)) return push(`Invalid MPQ id: ${id}`, "error");
+    const numericId = requireNumericId(id, push);
+    if (numericId === null) return;
 
     let filePaths: string[] = [];
     selected.forEach((entry) => {
@@ -130,8 +133,8 @@ export default function useMpqFileCache({ activeMpqRef }: UseMpqFileCacheProps) 
   const renameEntry = async (file: ViewEntry, name: string) => {
     const id = getId();
     if (!id) return push("No MPQ open", "error");
-    const numericId = Number(id);
-    if (Number.isNaN(numericId)) return push(`Invalid MPQ id: ${id}`, "error");
+    const numericId = requireNumericId(id, push);
+    if (numericId === null) return;
 
     const cache = fileCache[id] || [];
     const oldName = toArchivePath(archivePath, file.name);
@@ -172,8 +175,9 @@ export default function useMpqFileCache({ activeMpqRef }: UseMpqFileCacheProps) 
     if (entries.length === 0) return push("Please select entries before deleting", "info");
     const id = getId();
     if (!id) return push("No MPQ open", "error");
-    const numericId = Number(id);
-    if (Number.isNaN(numericId)) return push(`Invalid MPQ id: ${id}`, "error");
+
+    const numericId = requireNumericId(id, push);
+    if (numericId === null) return;
 
     const cache = fileCache[id] || [];
 

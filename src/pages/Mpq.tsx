@@ -98,6 +98,27 @@ export default function Mpq() {
     mpq.closeMpq(k);
   };
 
+  const handleDbcOpen = (entry: ViewEntry) => {
+    if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
+      const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
+      setOpenDbc(fullPath);
+    }
+  };
+
+  const explorerProps = {
+    data: visibleEntries,
+    selected,
+    loading: mpq.loading,
+    path: mpq.archivePath,
+    onDirClick: navigate,
+    onCrumbClick: navigateTo,
+    onCreateDirClick: () => setModal("mkdir"),
+    onRenameDirClick: () => setModal("rename"),
+    onExtractClick: handleExtract,
+    onRowClick: selectRow,
+    onDoubleClick: handleDbcOpen,
+  };
+
   return (
     <div className="flex flex-col h-full">
       {modal === "mkdir" && (
@@ -169,24 +190,7 @@ export default function Mpq() {
         {openDbc && mpq.activeMpq ? (
           <Group orientation="vertical" className="flex flex-col h-full">
             <Panel defaultSize={55} minSize={20} className="min-h-0 overflow-hidden">
-              <FileExplorer
-                data={visibleEntries}
-                selected={selected}
-                loading={mpq.loading}
-                path={mpq.archivePath}
-                onDirClick={(val: string) => navigate(val)}
-                onCrumbClick={(val: number) => navigateTo(val)}
-                onCreateDirClick={() => setModal("mkdir")}
-                onRenameDirClick={() => setModal("rename")}
-                onExtractClick={handleExtract}
-                onRowClick={selectRow}
-                onDoubleClick={(entry: ViewEntry) => {
-                  if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
-                    const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
-                    setOpenDbc(fullPath);
-                  }
-                }}
-              />
+              <FileExplorer {...explorerProps} />
             </Panel>
             <Separator className="h-1.5 shrink-0 bg-ayu-border hover:bg-ayu-cyan cursor-row-resize transition-colors" />
             <Panel defaultSize={45} minSize={15} className="min-h-0 overflow-hidden">
@@ -199,24 +203,7 @@ export default function Mpq() {
           </Group>
         ) : (
           <div className="flex flex-col min-h-0">
-            <FileExplorer
-              data={visibleEntries}
-              selected={selected}
-              loading={mpq.loading}
-              path={mpq.archivePath}
-              onDirClick={(val: string) => navigate(val)}
-              onCrumbClick={(val: number) => navigateTo(val)}
-              onCreateDirClick={() => setModal("mkdir")}
-              onRenameDirClick={() => setModal("rename")}
-              onExtractClick={handleExtract}
-              onRowClick={selectRow}
-              onDoubleClick={(entry: ViewEntry) => {
-                if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".dbc")) {
-                  const fullPath = windowsify(joinPath(mpq.archivePath, entry.name));
-                  setOpenDbc(fullPath);
-                }
-              }}
-            />
+            <FileExplorer {...explorerProps} />
           </div>
         )}
       </div>

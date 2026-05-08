@@ -46,37 +46,18 @@ export default function Settings(): JSX.Element {
     handleLoad();
   }, []);
 
-  const pickClientPath = async () => {
-    const path = await open({
-      directory: true,
-      title: "Select WoW Client Folder",
-    });
-    if (path) setSettings((prev) => ({ ...prev, client_path: path }));
+  const makePicker = (key: keyof Settings, title: string) => async () => {
+    const path = await open({ directory: true, title });
+    if (path) setSettings((prev) => ({ ...prev, [key]: path }));
   };
 
-  const pickOutputPath = async () => {
-    const path = await open({
-      directory: true,
-      title: "Pick a folder to dump patch files",
-    });
-    if (path) setSettings((prev) => ({ ...prev, output_path: path }));
-  };
-
-  const pickNoggitPath = async () => {
-    const path = await open({
-      directory: true,
-      title: "Pick the folder that contains Noggit project folders",
-    });
-    if (path) setSettings((prev) => ({ ...prev, noggit_projects_path: path }));
-  };
-
-  const pickServerPath = async () => {
-    const path = await open({
-      directory: true,
-      title: "Pick the folder that contains server data",
-    });
-    if (path) setSettings((prev) => ({ ...prev, server_path: path }));
-  };
+  const pickClientPath = makePicker("client_path", "Select WoW Client Folder");
+  const pickOutputPath = makePicker("output_path", "Pick a folder to dump patch files");
+  const pickNoggitPath = makePicker(
+    "noggit_projects_path",
+    "Pick a folder that contains Noggit project folders",
+  );
+  const pickServerPath = makePicker("server_path", "Pick the base of the azerothcore server");
 
   const handleSave = async () => {
     try {

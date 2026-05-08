@@ -8,9 +8,11 @@ export interface Toast {
   kind: ToastKind;
 }
 
+export type PushFn = (message: string, kind?: ToastKind) => void;
+
 interface ToastContextValue {
   toasts: Toast[];
-  push: (message: string, kind?: ToastKind) => void;
+  push: PushFn;
   dismiss: (id: string) => void;
 }
 
