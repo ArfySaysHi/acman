@@ -19,6 +19,15 @@ struct StepProgress {
     status: String,
 }
 
+pub fn get_steps() -> Vec<Box<dyn DeployStep>> {
+    vec![
+        Box::new(PackMpqStep),
+        Box::new(DeployNoggitProjectToClientStep),
+        Box::new(DeployDbcToServerStep),
+        Box::new(RestartWorldserverStep),
+    ]
+}
+
 #[tauri::command]
 pub async fn deploy_noggit_project(
     state: tauri::State<'_, SharedAppState>,
@@ -27,12 +36,8 @@ pub async fn deploy_noggit_project(
     patch_name: String,
 ) -> Result<(), String> {
     let ctx = DeployContext::from_state(&state, project_name, patch_name).await?;
-    let steps: Vec<Box<dyn DeployStep>> = vec![
-        Box::new(PackMpqStep),
-        Box::new(DeployNoggitProjectToClientStep),
-        Box::new(DeployDbcToServerStep),
-        Box::new(RestartWorldserverStep),
-    ];
+
+    let steps = get_steps();
 
     for step in steps {
         app.emit(
