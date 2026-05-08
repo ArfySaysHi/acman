@@ -13,7 +13,7 @@ interface DbcViewerProps {
 }
 
 export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
-  const { data, filter, setFilter, indexedRows, filteredRows, loading, reload } = useDbcData({
+  const { data, filter, setFilter, indexedRows, loading, reload } = useDbcData({
     id: mpqId,
     path,
   });
@@ -63,10 +63,10 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
         {data && (
           <span className="text-[10px]" style={{ color: "var(--color-ayu-dim)" }}>
             {data.columns.length} cols · {data.rows.length} rows
-            {filteredRows.length !== data.rows.length && (
+            {indexedRows.length !== data.rows.length && (
               <span style={{ color: "var(--color-ayu-yellow)" }}>
                 {" "}
-                → {filteredRows.length} matched
+                → {indexedRows.length} matched
               </span>
             )}
             {isDirty && (

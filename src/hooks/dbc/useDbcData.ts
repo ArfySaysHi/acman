@@ -43,13 +43,6 @@ export default function useDbcData({ id, path }: UseDbcDataProps) {
     loadDbc();
   }, [id, path]);
 
-  const filteredRows =
-    data && filter.trim()
-      ? data.rows.filter((row) =>
-          row.some((cell) => String(cell).toLowerCase().includes(filter.toLowerCase())),
-        )
-      : (data?.rows ?? []);
-
   const indexedRows = useMemo(
     () =>
       data?.rows
@@ -62,7 +55,5 @@ export default function useDbcData({ id, path }: UseDbcDataProps) {
     [data, filter],
   );
 
-  const reload = loadDbc;
-
-  return { data, filter, setFilter, indexedRows, filteredRows, loading, reload };
+  return { data, filter, setFilter, indexedRows, loading, reload: loadDbc };
 }
