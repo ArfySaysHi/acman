@@ -1,4 +1,4 @@
-import DbcHelper from "../../helpers/DbcHelper";
+import { editKey, displayValue } from "../../helpers/dbcHelper";
 import { DbcValue } from "../../hooks/dbc/useDbcData";
 import { EditKey } from "../../hooks/dbc/useDbcEdits";
 import DbcCell from "./DbcCell";
@@ -29,7 +29,7 @@ export default function DbcRow({
   onTab,
 }: DbcRowProps) {
   // This is different as it has to check without knowledge of the column
-  const isDirty = row.some((_, ci) => pendingEdits.has(DbcHelper.editKey(rowId, ci)));
+  const isDirty = row.some((_, ci) => pendingEdits.has(editKey(rowId, ci)));
 
   return (
     <div
@@ -54,14 +54,14 @@ export default function DbcRow({
       </div>
 
       {row.map((cell, colId) => {
-        const key = DbcHelper.editKey(rowId, colId);
+        const key = editKey(rowId, colId);
         const isFocused = focusedCell === key;
 
         return (
           <DbcCell
             key={colId}
             editKey={key}
-            value={DbcHelper.displayValue(cell, key, pendingEdits)}
+            value={displayValue(cell, key, pendingEdits)}
             isDirty={pendingEdits.has(key)}
             onCommit={onCellChange}
             onRevert={onCellRevert}

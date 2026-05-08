@@ -1,6 +1,6 @@
 import useDbcData from "../../hooks/dbc/useDbcData";
 import useDbcEdits from "../../hooks/dbc/useDbcEdits";
-import PathHelper from "../../helpers/PathHelper";
+import { pathToFileName } from "../../helpers/pathHelper";
 import DbcTableBody from "../dbc/DbcTableBody";
 import { useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -18,7 +18,7 @@ export default function DbcViewer({ mpqId, path, onClose }: DbcViewerProps) {
     path,
   });
   const { pendingEdits, editCell, revertCell, revertAll, isDirty } = useDbcEdits();
-  const fileName = PathHelper.pathToFileName(path);
+  const fileName = pathToFileName(path);
   const colWidths = useMemo(
     () => data?.columns.map((col) => Math.max(col.length * 8 + 24, 80)) ?? [],
     [data?.columns],
