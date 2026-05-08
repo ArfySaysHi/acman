@@ -51,8 +51,15 @@ export default function useDbcData({ id, path }: UseDbcDataProps) {
       : (data?.rows ?? []);
 
   const indexedRows = useMemo(
-    () => filteredRows.map((row): IndexedRow => ({ row, originalIdx: data!.rows.indexOf(row) })),
-    [filteredRows],
+    () =>
+      data?.rows
+        .map((row, i) => ({ row, originalIdx: i }))
+        .filter(
+          ({ row }) =>
+            !filter.trim() ||
+            row.some((cell) => String(cell).toLowerCase().includes(filter.toLowerCase())),
+        ) ?? [],
+    [data, filter],
   );
 
   const reload = loadDbc;
