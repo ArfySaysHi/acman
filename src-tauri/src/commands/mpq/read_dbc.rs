@@ -1,5 +1,6 @@
 use crate::helpers::dbc::dbc_name_map;
 use serde::Serialize;
+use tracing::info;
 use wow_cdbc::{DbcParser, RecordSet, Value};
 
 use crate::{
@@ -83,28 +84,25 @@ pub async fn read_dbc(
     id: u32,
     path: String,
 ) -> Result<DbcResponse, String> {
+    info!("read_dbc called with {id} | {path}");
     let state = state.inner().clone();
     let file_name = extract_dbc_name(&path);
     let name_map = dbc_name_map();
-    let table_name = name_map.get(&file_name);
+    let table_name: &str = name_map
+        .get(file_name)
+        .map(|n| n.trim_end_matches(".dbc"))
+        .unwrap_or(file_name);
 
+    info!(table_name=?table_name, "read_dbc retrieved file_name: {file_name} | path: {path}");
     let dbc_raw = extract_file(state, id, path.clone()).await?;
+    let parsed_schema = load_dbd(app_handle, table_name)?;
 
-    // Getting the schema for the given dbc name
-    let parsed_schema = {
-        if let Some(name) = &table_name {
-            load_dbd(app_handle, name)?
-        } else {
-            load_dbd(app_handle, file_name)?
-        }
-    };
     let columns = parsed_schema
         .fields
         .iter()
         .map(|f| f.name.clone())
         .collect();
 
-    // Providing context to DBC columns and shipping it out
     let dbc_records = parse_records_with_schema(&dbc_raw, parsed_schema)
         .map_err(|e| format!("Failed to parse dbc_bytes: {e}"))?;
     let response = build_response(dbc_records, columns);

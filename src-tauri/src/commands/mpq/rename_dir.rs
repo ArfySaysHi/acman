@@ -20,12 +20,7 @@ pub async fn rename_dir(
         .list()
         .map_err(|e| e.to_string())?
         .into_iter()
-        .filter(|entry| {
-            entry
-                .name
-                .to_lowercase()
-                .starts_with(&old_prefix.to_lowercase())
-        })
+        .filter(|entry| entry.name.starts_with(&old_prefix))
         .map(|entry| entry.name)
         .collect();
 
